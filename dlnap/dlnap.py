@@ -565,7 +565,7 @@ class DlnapDevice:
       packet = self._create_packet('GetTransportInfo', {'InstanceID': instance_id})
       return _send_tcp((self.ip, self.port), packet)
 
-   def media_info(self, instance_id=0):
+    def media_info(self, instance_id=0):
       """ Media info.
 
       instance_id -- device instance id
