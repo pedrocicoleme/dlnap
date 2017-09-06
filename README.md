@@ -28,6 +28,7 @@ Simple network player for DLNA/UPnP devices allows you discover devices and play
  * _please email me if it works or doesn't work with your device_
 
 ## Prepare
+### Install dependencies
     pip install -r requirement.txt
  
 ## Usage
