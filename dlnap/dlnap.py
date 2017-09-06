@@ -431,10 +431,10 @@ class DlnapDevice:
    def __repr__(self):
       return '{} @ {}'.format(self.name, self.ip)
 
-   def __eq__(self, d):
+    def __eq__(self, d):
       return self.name == d.name and self.ip == d.ip
 
-   def _payload_from_template(self, action, data, urn):
+    def _payload_from_template(self, action, data, urn):
       """ Assembly payload from template.
       """
       fields = ''
@@ -451,7 +451,7 @@ class DlnapDevice:
          </s:Envelope>""".format(action=action, urn=urn, fields=fields)
       return payload
 
-   def _create_packet(self, action, data):
+    def _create_packet(self, action, data):
       """ Create packet to send to device control url.
 
       action -- control action
