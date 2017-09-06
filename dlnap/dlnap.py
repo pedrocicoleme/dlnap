@@ -498,8 +498,8 @@ class DlnapDevice:
       packet = self._create_packet('Play', {'InstanceID': instance_id, 'Speed': 1})
       _send_tcp((self.ip, self.port), packet)
 
-   def pause(self, instance_id = 0):
-      """ Pause media that is currently playing back.
+    def pause(self, instance_id = 0):
+        """ Pause media that is currently playing back.
 
       instance_id -- device instance id
       """
