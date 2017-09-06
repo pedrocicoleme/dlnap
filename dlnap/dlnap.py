@@ -150,27 +150,27 @@ def _xml2dict(s, ignoreUntilXML = False):
          },
          'g': [value]
      }
-   }
-   """
-   if ignoreUntilXML:
-      s = ''.join(re.findall(".*?(<.*)", s, re.M))
+    }
+    """
+    if ignoreUntilXML:
+        s = ''.join(re.findall(".*?(<.*)", s, re.M))
 
-   d = {}
-   while s:
-      tag, value, s = _get_tag_value(s)
-      value = value.strip()
-      isXml, dummy, dummy2 = _get_tag_value(value)
-      if tag not in d:
-         d[tag] = []
-      if not isXml:
-         if not value:
-            continue
-         d[tag].append(value.strip())
-      else:
-         if tag not in d:
+    d = {}
+    while s:
+        tag, value, s = _get_tag_value(s)
+        value = value.strip()
+        isXml, dummy, dummy2 = _get_tag_value(value)
+        if tag not in d:
             d[tag] = []
-         d[tag].append(_xml2dict(value))
-   return d
+        if not isXml:
+            if not value:
+                continue
+            d[tag].append(value.strip())
+        else:
+            if tag not in d:
+                d[tag] = []
+            d[tag].append(_xml2dict(value))
+    return d
 
 s = """
    hello
@@ -322,15 +322,15 @@ def _get_control_url(xml, urn):
 
 @contextmanager
 def _send_udp(to, packet):
-   """ Send UDP message to group
+    """ Send UDP message to group
 
-   to -- (host, port) group to send the packet to
-   packet -- message to send
-   """
-   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-   sock.sendto(packet.encode(), to)
-   yield sock
-   sock.close()
+    to -- (host, port) group to send the packet to
+    packet -- message to send
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    sock.sendto(packet.encode(), to)
+    yield sock
+    sock.close()
 
 def _unescape_xml(xml):
    """ Replace escaped xml symbols with real ones.
