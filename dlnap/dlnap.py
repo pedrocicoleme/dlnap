@@ -673,16 +673,16 @@ class DlnapDevice:
 
 
 def discover(name = '', ip = '', timeout = 1, st = SSDP_ALL, mx = 3, ssdp_version = 1):
-   """ Discover UPnP devices in the local network.
+    """ Discover UPnP devices in the local network.
 
-   name -- name or part of the name to filter devices
-   timeout -- timeout to perform discover
-   st -- st field of discovery packet
-   mx -- mx field of discovery packet
-   return -- list of DlnapDevice
-   """
-   st = st.format(ssdp_version)
-   payload = "\r\n".join([
+    name -- name or part of the name to filter devices
+    timeout -- timeout to perform discover
+    st -- st field of discovery packet
+    mx -- mx field of discovery packet
+    return -- list of DlnapDevice
+    """
+    st = st.format(ssdp_version)
+    payload = "\r\n".join([
               'M-SEARCH * HTTP/1.1',
               'User-Agent: {}/{}'.format(__file__, __version__),
               'HOST: {}:{}'.format(*SSDP_GROUP),
@@ -692,36 +692,35 @@ def discover(name = '', ip = '', timeout = 1, st = SSDP_ALL, mx = 3, ssdp_versio
               'MX: {}'.format(mx),
               '',
               ''])
-   devices = []
-   with _send_udp(SSDP_GROUP, payload) as sock:
-      start = time.time()
-      while True:
-         if time.time() - start > timeout:
-            # timed out
-            break
-         r, w, x = select.select([sock], [], [sock], 1)
-         if sock in r:
-             data, addr = sock.recvfrom(1024)
-             if ip and addr[0] != ip:
-                continue
+    devices = []
+    with _send_udp(SSDP_GROUP, payload) as sock:
+        start = time.time()
+        while True:
+            if time.time() - start > timeout:
+                # timed out
+                break
+            r, w, x = select.select([sock], [], [sock], 1)
+            if sock in r:
+                data, addr = sock.recvfrom(1024)
+                if ip and addr[0] != ip:
+                    continue
 
-             d = DlnapDevice(data, addr[0])
-             d.ssdp_version = ssdp_version
-             if d not in devices:
-                if not name or name is None or name.lower() in d.name.lower():
-                   if not ip:
-                      devices.append(d)
-                   elif d.has_av_transport:
-                      # no need in further searching by ip
-                      devices.append(d)
-                      break
-
-         elif sock in x:
-             raise Exception('Getting response failed')
-         else:
-             # Nothing to read
-             pass
-   return devices
+                d = DlnapDevice(data, addr[0])
+                d.ssdp_version = ssdp_version
+                if d not in devices:
+                    if not name or name is None or name.lower() in d.name.lower():
+                        if not ip:
+                            devices.append(d)
+                    elif d.has_av_transport:
+                        # no need in further searching by ip
+                        devices.append(d)
+                        break
+            elif sock in x:
+                raise Exception('Getting response failed')
+            else:
+                # Nothing to read
+                pass
+    return devices
 
 if __name__ == '__main__':
    import getopt
