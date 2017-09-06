@@ -392,19 +392,19 @@ class DlnapDevice:
         self.__logger = logging.getLogger(self.__class__.__name__)
         self.__logger.info('=> New DlnapDevice (ip = {}) initialization..'.format(ip))
 
-      self.ip = ip
-      self.ssdp_version = 1
+        self.ip = ip
+        self.ssdp_version = 1
 
-      self.port = None
-      self.name = 'Unknown'
-      self.control_url = None
-      self.rendering_control_url = None
-      self.has_av_transport = False
+        self.port = None
+        self.name = 'Unknown'
+        self.control_url = None
+        self.rendering_control_url = None
+        self.has_av_transport = False
 
-      try:
-         self.__raw = raw.decode()
-         self.location = _get_location_url(self.__raw)
-         self.__logger.info('location: {}'.format(self.location))
+        try:
+            self.__raw = raw.decode()
+            self.location = _get_location_url(self.__raw)
+            self.__logger.info('location: {}'.format(self.location))
 
          self.port = _get_port(self.location)
          self.__logger.info('port: {}'.format(self.port))
