@@ -127,11 +127,10 @@ def _get_tag_value(x, i = 0):
    return (tag.strip(), value[:-1], x[i+1:])
 
 def _xml2dict(s, ignoreUntilXML = False):
+    """ Convert xml to dictionary.
 
-   """ Convert xml to dictionary.
-
-   <?xml version="1.0"?>
-   <a any_tag="tag value">
+    <?xml version="1.0"?>
+    <a any_tag="tag value">
       <b> <bb>value1</bb> </b>
       <b> <bb>value2</bb> </b>
       </c>
@@ -139,11 +138,11 @@ def _xml2dict(s, ignoreUntilXML = False):
          <e>value4</e>
       </d>
       <g>value</g>
-   </a>
+    </a>
 
-   =>
+    =>
 
-   { 'a':
+    { 'a':
      {
          'b': [ {'bb':value1}, {'bb':value2} ],
          'c': [],
