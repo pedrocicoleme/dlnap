@@ -385,8 +385,8 @@ def _get_friendly_name(xml):
     return name if name is not None else 'Unknown'
 
 class DlnapDevice:
-   """ Represents DLNA/UPnP device.
-   """
+    """ Represents DLNA/UPnP device.
+    """
 
    def __init__(self, raw, ip):
       self.__logger = logging.getLogger(self.__class__.__name__)
