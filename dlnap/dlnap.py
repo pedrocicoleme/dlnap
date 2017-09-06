@@ -582,10 +582,10 @@ class DlnapDevice:
       return _send_tcp((self.ip, self.port), packet)
 
 
-   def set_next(self, url):
+    def set_next(self, url):
       pass
 
-   def next(self):
+    def next(self):
       pass
 
 
