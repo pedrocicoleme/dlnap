@@ -489,6 +489,38 @@ class DlnapDevice:
       """
       packet = self._create_packet('SetAVTransportURI', {'InstanceID':instance_id, 'CurrentURI':url, 'CurrentURIMetaData':'' })
       _send_tcp((self.ip, self.port), packet)
+    def _soap_request(self, action, data):
+        if action in ["SetVolume", "SetMute", "GetVolume"]:
+            url = self.rendering_control_url
+            urn = URN_RenderingControl_Fmt.format(self.ssdp_version)
+        else:
+            url = self.control_url
+            urn = URN_AVTransport_Fmt.format(self.ssdp_version)
+        soap_url = 'http://{}:{}{}'.format(self.ip, self.port, url)
+        headers = {'Content-type': 'text/xml',
+                   'SOAPACTION': '"{}#{}"'.format(urn, action),
+                   'charset': 'utf-8',
+                   'User-Agent': '{}/{}'.format(__file__, __version__)}
+        self.__logger.debug(headers)
+        payload = self._payload_from_template(action=action, data=data, urn=urn)
+        self.__logger.debug(payload)
+        try:
+            req = Request(soap_url,data=payload.encode(), headers=headers)
+            res = urlopen(req)
+            if res.code == 200:
+                data = res.read()
+                self.__logger.debug(data.decode())
+                response = xmltodict.parse(data)
+                try:
+                    errorDescription = response['s:Envelope']['s:Body']['s:Fault']['detail']['UPnPError']['errorDescription']
+                    logging.error(errorDescription)
+                    return
+                except:
+                    pass
+                return response
+            # data = _unescape_xml(data)
+        except Exception as e:
+            logging.error(e)
 
    def play(self, instance_id = 0):
       """ Play media that was already set as current.
