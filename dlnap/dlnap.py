@@ -192,29 +192,29 @@ s = """
 """
 
 def _xpath(d, path):
-   """ Return value from xml dictionary at path.
+    """ Return value from xml dictionary at path.
 
-   d -- xml dictionary
-   path -- string path like root/device/serviceList/service@serviceType=URN_AVTransport/controlURL
-   return -- value at path or None if path not found
-   """
+    d -- xml dictionary
+    path -- string path like root/device/serviceList/service@serviceType=URN_AVTransport/controlURL
+    return -- value at path or None if path not found
+    """
 
-   for p in path.split('/'):
-      tag_attr = p.split('@')
-      tag = tag_attr[0]
-      if tag not in d:
-         return None
+    for p in path.split('/'):
+        tag_attr = p.split('@')
+        tag = tag_attr[0]
+        if tag not in d:
+            return None
 
-      attr = tag_attr[1] if len(tag_attr) > 1 else ''
-      if attr:
-         a, aval = attr.split('=')
-         for s in d[tag]:
-            if s[a] == [aval]:
-               d = s
-               break
-      else:
+        attr = tag_attr[1] if len(tag_attr) > 1 else ''
+        if attr:
+            a, aval = attr.split('=')
+            for s in d[tag]:
+                if s[a] == [aval]:
+                    d = s
+                    break
+        else:
          d = d[tag][0]
-   return d
+    return d
 #
 # XML to DICT
 # =================================================================================================
@@ -223,104 +223,104 @@ def _xpath(d, path):
 running = False
 class DownloadProxy(BaseHTTPRequestHandler):
 
-   def log_message(self, format, *args):
-      pass
+    def log_message(self, format, *args):
+        pass
 
-   def log_request(self, code='-', size='-'):
-      pass
+    def log_request(self, code='-', size='-'):
+        pass
 
-   def response_success(self):
-      url = self.path[1:] # replace '/'
+    def response_success(self):
+        url = self.path[1:] # replace '/'
 
-      if os.path.exists(url):
-         f = open(url)
-         content_type = mimetypes.guess_type(url)[0]
-      else:
-         f = urlopen(url=url)
+        if os.path.exists(url):
+            f = open(url)
+            content_type = mimetypes.guess_type(url)[0]
+        else:
+            f = urlopen(url=url)
 
-         if py3:
-            content_type = f.getheader("Content-Type")
-         else:
-            content_type = f.info().getheaders("Content-Type")[0]
-
-      self.send_response(200, "ok")
-      self.send_header('Access-Control-Allow-Origin', '*')
-      self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
-      self.send_header("Access-Control-Allow-Headers", "X-Requested-With")
-      self.send_header("Access-Control-Allow-Headers", "Content-Type")
-      self.send_header("Content-Type", content_type)
-      self.end_headers()
-
-   def do_OPTIONS(self):
-      self.response_success()
-
-   def do_HEAD(self):
-      self.response_success()
-
-   def do_GET(self):
-      global running
-      url = self.path[1:] # replace '/'
-
-      content_type = ''
-      if os.path.exists(url):
-         f = open(url)
-         content_type = mimetypes.guess_type(url)[0]
-         size = os.path.getsize(url)
-      elif not url or not url.startswith('http'):
-         self.response_success()
-         return
-      else:
-         f = urlopen(url=url)
-
-      try:
-         if not content_type:
             if py3:
-               content_type = f.getheader("Content-Type")
-               size = f.getheader("Content-Length")
+                content_type = f.getheader("Content-Type")
             else:
-               content_type = f.info().getheaders("Content-Type")[0]
-               size = f.info().getheaders("Content-Length")[0]
+                content_type = f.info().getheaders("Content-Type")[0]
 
-         self.send_response(200)
-         self.send_header('Access-Control-Allow-Origin', '*')
-         self.send_header("Content-Type", content_type)
-         self.send_header("Content-Disposition", 'attachment; filename="{}"'.format(os.path.basename(url)))
-         self.send_header("Content-Length", str(size))
-         self.end_headers()
-         shutil.copyfileobj(f, self.wfile)
-      finally:
-         running = False
-         f.close()
+        self.send_response(200, "ok")
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "X-Requested-With")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Content-Type", content_type)
+        self.end_headers()
+
+    def do_OPTIONS(self):
+        self.response_success()
+
+    def do_HEAD(self):
+        self.response_success()
+
+    def do_GET(self):
+        global running
+        url = self.path[1:] # replace '/'
+
+        content_type = ''
+        if os.path.exists(url):
+            f = open(url)
+            content_type = mimetypes.guess_type(url)[0]
+            size = os.path.getsize(url)
+        elif not url or not url.startswith('http'):
+            self.response_success()
+            return
+        else:
+            f = urlopen(url=url)
+
+        try:
+            if not content_type:
+                if py3:
+                    content_type = f.getheader("Content-Type")
+                    size = f.getheader("Content-Length")
+                else:
+                    content_type = f.info().getheaders("Content-Type")[0]
+                    size = f.info().getheaders("Content-Length")[0]
+
+            self.send_response(200)
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Disposition", 'attachment; filename="{}"'.format(os.path.basename(url)))
+            self.send_header("Content-Length", str(size))
+            self.end_headers()
+            shutil.copyfileobj(f, self.wfile)
+        finally:
+            running = False
+            f.close()
 
 def runProxy(ip = '', port = 8000):
-   global running
-   running = True
-   DownloadProxy.protocol_version = "HTTP/1.0"
-   httpd = HTTPServer((ip, port), DownloadProxy)
-   while running:
-      httpd.handle_request()
+    global running
+    running = True
+    DownloadProxy.protocol_version = "HTTP/1.0"
+    httpd = HTTPServer((ip, port), DownloadProxy)
+    while running:
+        httpd.handle_request()
 
 #
 # PROXY
 # =================================================================================================
 
 def _get_port(location):
-   """ Extract port number from url.
+    """ Extract port number from url.
 
-   location -- string like http://anyurl:port/whatever/path
-   return -- port number
-   """
-   port = re.findall('http://.*?:(\d+).*', location)
-   return int(port[0]) if port else 80
+    location -- string like http://anyurl:port/whatever/path
+    return -- port number
+    """
+    port = re.findall('http://.*?:(\d+).*', location)
+    return int(port[0]) if port else 80
 
 
 def _get_control_url(xml, urn):
-   """ Extract AVTransport contol url from device description xml
+    """ Extract AVTransport contol url from device description xml
 
-   xml -- device description xml
-   return -- control url or empty string if wasn't found
-   """
-   return _xpath(xml, 'root/device/serviceList/service@serviceType={}/controlURL'.format(urn))
+    xml -- device description xml
+    return -- control url or empty string if wasn't found
+    """
+    return _xpath(xml, 'root/device/serviceList/service@serviceType={}/controlURL'.format(urn))
 
 @contextmanager
 def _send_udp(to, packet):
@@ -469,19 +469,18 @@ class DlnapDevice:
             self.__logger.warning('DlnapDevice (ip = {}) init exception:\n{}'.format(ip, traceback.format_exc()))
 
     def __repr__(self):
-      return '{} @ {}'.format(self.name, self.ip)
+        return '{} @ {}'.format(self.name, self.ip)
 
     def __eq__(self, d):
-      return self.name == d.name and self.ip == d.ip
+        return self.name == d.name and self.ip == d.ip
 
     def _payload_from_template(self, action, data, urn):
-      """ Assembly payload from template.
-      """
-      fields = ''
-      for tag, value in data.items():
-        fields += '<{tag}>{value}</{tag}>'.format(tag=tag, value=value)
-
-      payload = """<?xml version="1.0" encoding="utf-8"?>
+        """ Assembly payload from template.
+        """
+        fields = ''
+        for tag, value in data.items():
+            fields += '<{tag}>{value}</{tag}>'.format(tag=tag, value=value)
+        payload = """<?xml version="1.0" encoding="utf-8"?>
          <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
             <s:Body>
                <u:{action} xmlns:u="{urn}">
@@ -489,37 +488,37 @@ class DlnapDevice:
                </u:{action}>
             </s:Body>
          </s:Envelope>""".format(action=action, urn=urn, fields=fields)
-      return payload
+        return payload
 
     def _create_packet(self, action, data):
-      """ Create packet to send to device control url.
+        """ Create packet to send to device control url.
 
-      action -- control action
-      data -- dictionary with XML fields value
-      """
-      if action in ["SetVolume", "SetMute", "GetVolume"]:
-          url = self.rendering_control_url
-          urn = URN_RenderingControl_Fmt.format(self.ssdp_version)
-      else:
-          url = self.control_url
-          urn = URN_AVTransport_Fmt.format(self.ssdp_version)
-      payload = self._payload_from_template(action=action, data=data, urn=urn)
+        action -- control action
+        data -- dictionary with XML fields value
+        """
+        if action in ["SetVolume", "SetMute", "GetVolume"]:
+            url = self.rendering_control_url
+            urn = URN_RenderingControl_Fmt.format(self.ssdp_version)
+        else:
+            url = self.control_url
+            urn = URN_AVTransport_Fmt.format(self.ssdp_version)
+        payload = self._payload_from_template(action=action, data=data, urn=urn)
 
-      packet = "\r\n".join([
-         'POST {} HTTP/1.1'.format(url),
-         'User-Agent: {}/{}'.format(__file__, __version__),
-         'Accept: */*',
-         'Content-Type: text/xml; charset="utf-8"',
-         'HOST: {}:{}'.format(self.ip, self.port),
-         'Content-Length: {}'.format(len(payload)),
-         'SOAPACTION: "{}#{}"'.format(urn, action),
-         'Connection: close',
-         '',
-         payload,
-         ])
+        packet = "\r\n".join([
+            'POST {} HTTP/1.1'.format(url),
+            'User-Agent: {}/{}'.format(__file__, __version__),
+            'Accept: */*',
+            'Content-Type: text/xml; charset="utf-8"',
+            'HOST: {}:{}'.format(self.ip, self.port),
+            'Content-Length: {}'.format(len(payload)),
+            'SOAPACTION: "{}#{}"'.format(urn, action),
+            'Connection: close',
+            '',
+            payload,
+            ])
 
-      self.__logger.debug(packet)
-      return packet
+        self.__logger.debug(packet)
+        return packet
 
     def _soap_request(self, action, data):
         if action in ["SetVolume", "SetMute", "GetVolume"]:
@@ -588,71 +587,70 @@ class DlnapDevice:
         _send_tcp((self.ip, self.port), packet)
 
     def stop(self, instance_id = 0):
-      """ Stop media that is currently playing back.
+        """ Stop media that is currently playing back.
 
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('Stop', {'InstanceID': instance_id, 'Speed': 1})
-      _send_tcp((self.ip, self.port), packet)
+        instance_id -- device instance id
+        """
+        packet = self._create_packet('Stop', {'InstanceID': instance_id, 'Speed': 1})
+        _send_tcp((self.ip, self.port), packet)
 
 
     def seek(self, position, instance_id = 0):
-      """
-      Seek position
-      """
-      packet = self._create_packet('Seek', {'InstanceID':instance_id, 'Unit':'REL_TIME', 'Target': position })
-      _send_tcp((self.ip, self.port), packet)
+        """
+        Seek position
+        """
+        packet = self._create_packet('Seek', {'InstanceID':instance_id, 'Unit':'REL_TIME', 'Target': position })
+        _send_tcp((self.ip, self.port), packet)
 
 
     def volume(self, volume=10, instance_id = 0):
-      """ Stop media that is currently playing back.
+        """ Stop media that is currently playing back.
 
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('SetVolume', {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
-
-      _send_tcp((self.ip, self.port), packet)
+        instance_id -- device instance id
+        """
+        packet = self._create_packet('SetVolume', {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
+        _send_tcp((self.ip, self.port), packet)
       
       
     def get_volume(self, instance_id = 0):
-      """
-      get volume
-      """
-      packet = self._create_packet('GetVolume', {'InstanceID':instance_id, 'Channel': 'Master'})
-      return _send_tcp((self.ip, self.port), packet)
+        """
+        get volume
+        """
+        packet = self._create_packet('GetVolume', {'InstanceID':instance_id, 'Channel': 'Master'})
+        return _send_tcp((self.ip, self.port), packet)
 
 
     def mute(self, instance_id = 0):
-      """ Stop media that is currently playing back.
+        """ Stop media that is currently playing back.
 
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
-      _send_tcp((self.ip, self.port), packet)
+        instance_id -- device instance id
+        """
+        packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
+        _send_tcp((self.ip, self.port), packet)
 
     def unmute(self, instance_id = 0):
-      """ Stop media that is currently playing back.
+        """ Stop media that is currently playing back.
 
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '0', 'Channel': 'Master'})
-      _send_tcp((self.ip, self.port), packet)
+        instance_id -- device instance id
+        """
+        packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '0', 'Channel': 'Master'})
+        _send_tcp((self.ip, self.port), packet)
 
     def info(self, instance_id=0):
-      """ Transport info.
+        """ Transport info.
 
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('GetTransportInfo', {'InstanceID': instance_id})
-      return _send_tcp((self.ip, self.port), packet)
+        instance_id -- device instance id
+        """
+        packet = self._create_packet('GetTransportInfo', {'InstanceID': instance_id})
+        return _send_tcp((self.ip, self.port), packet)
 
     def media_info(self, instance_id=0):
-      """ Media info.
+        """ Media info.
 
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('GetMediaInfo', {'InstanceID': instance_id})
-      return _send_tcp((self.ip, self.port), packet)
+        instance_id -- device instance id
+        """
+        packet = self._create_packet('GetMediaInfo', {'InstanceID': instance_id})
+        return _send_tcp((self.ip, self.port), packet)
 
 
     def position_info(self, instance_id=0):
@@ -666,10 +664,10 @@ class DlnapDevice:
 
 
     def set_next(self, url):
-      pass
+        pass
 
     def next(self):
-      pass
+        pass
 
 
 def discover(name = '', ip = '', timeout = 1, st = SSDP_ALL, mx = 3, ssdp_version = 1):
