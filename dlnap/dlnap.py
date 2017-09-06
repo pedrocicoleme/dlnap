@@ -34,7 +34,7 @@ import traceback
 import mimetypes
 from contextlib import contextmanager
 
-import xmltodict
+import xmltodict  # xmltodict==0.11.0
 
 import os
 py3 = sys.version_info[0] == 3
@@ -423,7 +423,7 @@ class DlnapDevice:
             # raw_desc_xml_new = urlopen(self.location).read()
 
             desc_xml = xmltodict.parse(raw_desc_xml)
-            # self.__logger.debug('description xml: {}'.format(desc_xml))
+            self.__logger.debug('description xml: {}'.format(desc_xml))
             
             self.name = desc_xml['root']['device']['friendlyName']
             self.__logger.info('friendlyName: {}'.format(self.name))
