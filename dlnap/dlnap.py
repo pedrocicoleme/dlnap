@@ -406,10 +406,10 @@ class DlnapDevice:
             self.location = _get_location_url(self.__raw)
             self.__logger.info('location: {}'.format(self.location))
 
-         self.port = _get_port(self.location)
-         self.__logger.info('port: {}'.format(self.port))
+            self.port = _get_port(self.location)
+            self.__logger.info('port: {}'.format(self.port))
 
-         raw_desc_xml = urlopen(self.location).read().decode()
+            raw_desc_xml = urlopen(self.location).read().decode()
 
          self.__desc_xml = _xml2dict(raw_desc_xml)
          self.__logger.debug('description xml: {}'.format(self.__desc_xml))
