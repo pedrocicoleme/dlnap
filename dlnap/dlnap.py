@@ -376,13 +376,13 @@ def _get_location_url(raw):
     return ''
 
 def _get_friendly_name(xml):
-   """ Extract device name from description xml
+    """ Extract device name from description xml
 
-   xml -- device description xml
-   return -- device name
-   """
-   name = _xpath(xml, 'root/device/friendlyName')
-   return name if name is not None else 'Unknown'
+    xml -- device description xml
+    return -- device name
+    """
+    name = _xpath(xml, 'root/device/friendlyName')
+    return name if name is not None else 'Unknown'
 
 class DlnapDevice:
    """ Represents DLNA/UPnP device.
