@@ -40,10 +40,12 @@ import os
 py3 = sys.version_info[0] == 3
 if py3:
     from urllib.request import urlopen
+    from urllib.request import Request
     from http.server import HTTPServer
     from http.server import BaseHTTPRequestHandler
 else:
     from urllib2 import urlopen
+    from urllib2 import Request
     from BaseHTTPServer import BaseHTTPRequestHandler
     from BaseHTTPServer import HTTPServer
 
@@ -520,14 +522,6 @@ class DlnapDevice:
       self.__logger.debug(packet)
       return packet
 
-   def set_current_media(self, url, instance_id = 0):
-      """ Set media to playback.
-
-      url -- media url
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('SetAVTransportURI', {'InstanceID':instance_id, 'CurrentURI':url, 'CurrentURIMetaData':'' })
-      _send_tcp((self.ip, self.port), packet)
     def _soap_request(self, action, data):
         if action in ["SetVolume", "SetMute", "GetVolume"]:
             url = self.rendering_control_url
@@ -561,13 +555,30 @@ class DlnapDevice:
         except Exception as e:
             logging.error(e)
 
-   def play(self, instance_id = 0):
-      """ Play media that was already set as current.
+    def set_current_media(self, url, instance_id = 0):
+        """ Set media to playback.
 
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('Play', {'InstanceID': instance_id, 'Speed': 1})
-      _send_tcp((self.ip, self.port), packet)
+        url -- media url
+        instance_id -- device instance id
+        """
+        response = self._soap_request('SetAVTransportURI', {'InstanceID':instance_id, 'CurrentURI':url, 'CurrentURIMetaData':'' })
+        try:
+            response['s:Envelope']['s:Body']['u:SetAVTransportURIResponse']
+            return True
+        except:
+            return False
+
+    def play(self, instance_id = 0):
+        """ Play media that was already set as current.
+
+        instance_id -- device instance id
+        """
+        response = self._soap_request('Play', {'InstanceID': instance_id, 'Speed': 1})
+        try:
+            response['s:Envelope']['s:Body']['u:PlayResponse']
+            return True
+        except:
+            return False
 
     def pause(self, instance_id = 0):
         """ Pause media that is currently playing back.
@@ -645,12 +656,14 @@ class DlnapDevice:
       return _send_tcp((self.ip, self.port), packet)
 
 
-   def position_info(self, instance_id=0):
-      """ Position info.
-      instance_id -- device instance id
-      """
-      packet = self._create_packet('GetPositionInfo', {'InstanceID': instance_id})
-      return _send_tcp((self.ip, self.port), packet)
+    def position_info(self, instance_id=0):
+        """ Position info.
+        instance_id -- device instance id
+        """
+        xml = self._soap_request('GetPositionInfo', {'InstanceID': instance_id})
+        if xml:
+            return dict(xml['s:Envelope']['s:Body']['u:GetPositionInfoResponse'])
+            
 
 
     def set_next(self, url):
