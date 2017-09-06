@@ -338,30 +338,30 @@ def _unescape_xml(xml):
    return xml.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
 
 def _send_tcp(to, payload):
-   """ Send TCP message to group
+    """ Send TCP message to group
 
-   to -- (host, port) group to send to payload to
-   payload -- message to send
-   """
-   try:
-      sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      sock.settimeout(5)
-      sock.connect(to)
-      sock.sendall(payload.encode('utf-8'))
+    to -- (host, port) group to send to payload to
+    payload -- message to send
+    """
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5)
+        sock.connect(to)
+        sock.sendall(payload.encode('utf-8'))
 
-      data = sock.recv(2048)
-      if py3:
-         data = data.decode('utf-8')
-      data = _xml2dict(_unescape_xml(data), True)
+        data = sock.recv(2048)
+        if py3:
+            data = data.decode('utf-8')
+        data = _xml2dict(_unescape_xml(data), True)
 
-      errorDescription = _xpath(data, 's:Envelope/s:Body/s:Fault/detail/UPnPError/errorDescription')
-      if errorDescription is not None:
-         logging.error(errorDescription)
-   except Exception as e:
-      data = ''
-   finally:
-      sock.close()
-   return data
+        errorDescription = _xpath(data, 's:Envelope/s:Body/s:Fault/detail/UPnPError/errorDescription')
+        if errorDescription is not None:
+            logging.error(errorDescription)
+    except Exception as e:
+        data = ''
+    finally:
+        sock.close()
+    return data
 
 
 def _get_location_url(raw):
