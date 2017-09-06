@@ -34,6 +34,7 @@ import traceback
 import mimetypes
 from contextlib import contextmanager
 
+import xmltodict
 
 import os
 py3 = sys.version_info[0] == 3
@@ -411,24 +412,62 @@ class DlnapDevice:
 
             raw_desc_xml = urlopen(self.location).read().decode()
 
-         self.__desc_xml = _xml2dict(raw_desc_xml)
-         self.__logger.debug('description xml: {}'.format(self.__desc_xml))
+############---new---############
+            # test only
+            # os.chdir(os.path.dirname(os.path.abspath(__file__)))  # set file path as current
+            # raw_desc_xml = open('description.xml').read()
+            # raw_desc_xml_new = raw_desc_xml.encode()
+            # test end
 
-         self.name = _get_friendly_name(self.__desc_xml)
-         self.__logger.info('friendlyName: {}'.format(self.name))
+            # raw_desc_xml_new = urlopen(self.location).read()
 
-         self.control_url = _get_control_url(self.__desc_xml, URN_AVTransport)
-         self.__logger.info('control_url: {}'.format(self.control_url))
+            desc_xml = xmltodict.parse(raw_desc_xml)
+            # self.__logger.debug('description xml: {}'.format(desc_xml))
+            
+            self.name = desc_xml['root']['device']['friendlyName']
+            self.__logger.info('friendlyName: {}'.format(self.name))
 
-         self.rendering_control_url = _get_control_url(self.__desc_xml, URN_RenderingControl)
-         self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
+            services_url = {i['serviceType']:i['controlURL'] for i in desc_xml['root']['device']['serviceList']['service']}
 
-         self.has_av_transport = self.control_url is not None
-         self.__logger.info('=> Initialization completed'.format(ip))
-      except Exception as e:
-         self.__logger.warning('DlnapDevice (ip = {}) init exception:\n{}'.format(ip, traceback.format_exc()))
+            self.control_url = services_url[URN_AVTransport]
+            self.__logger.info('control_url: {}'.format(self.control_url))
 
-   def __repr__(self):
+            self.rendering_control_url = services_url[URN_RenderingControl]
+            self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
+            
+            # tree_desc_xml = etree.XML(raw_desc_xml_new)
+            # ns_desc_xml = tree_desc_xml.nsmap
+            # ns_desc_xml['default'] = ns_desc_xml[None]
+            # ns_desc_xml.pop(None, None)
+
+            # self.name = tree_desc_xml.xpath('./default:device/default:friendlyName', namespaces = ns_desc_xml)[0].text
+            # self.__logger.info('friendlyName: {}'.format(self.name))
+
+            # self.control_url = tree_desc_xml.xpath('./default:device/default:serviceList/default:service[default:serviceType="{}"]/default:controlURL'.format(URN_AVTransport), namespaces = ns_desc_xml)[0].text
+            # self.__logger.info('control_url: {}'.format(self.control_url))
+
+            # self.rendering_control_url = tree_desc_xml.xpath('./default:device/default:serviceList/default:service[default:serviceType="{}"]/default:controlURL'.format(URN_RenderingControl), namespaces = ns_desc_xml)[0].text
+            # self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
+############---end---############
+
+            # self.__desc_xml = _xml2dict(raw_desc_xml)
+            # self.__logger.debug('description xml: {}'.format(self.__desc_xml))
+
+            # self.name = _get_friendly_name(self.__desc_xml)
+            # self.__logger.info('friendlyName: {}'.format(self.name))
+
+            # self.control_url = _get_control_url(self.__desc_xml, URN_AVTransport)
+            # self.__logger.info('control_url: {}'.format(self.control_url))
+
+            # self.rendering_control_url = _get_control_url(self.__desc_xml, URN_RenderingControl)
+            # self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
+
+            self.has_av_transport = self.control_url is not None
+            self.__logger.info('=> Initialization completed'.format(ip))
+        except Exception as e:
+            self.__logger.warning('DlnapDevice (ip = {}) init exception:\n{}'.format(ip, traceback.format_exc()))
+
+    def __repr__(self):
       return '{} @ {}'.format(self.name, self.ip)
 
     def __eq__(self, d):
