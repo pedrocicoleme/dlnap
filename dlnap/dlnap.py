@@ -388,9 +388,9 @@ class DlnapDevice:
     """ Represents DLNA/UPnP device.
     """
 
-   def __init__(self, raw, ip):
-      self.__logger = logging.getLogger(self.__class__.__name__)
-      self.__logger.info('=> New DlnapDevice (ip = {}) initialization..'.format(ip))
+    def __init__(self, raw, ip):
+        self.__logger = logging.getLogger(self.__class__.__name__)
+        self.__logger.info('=> New DlnapDevice (ip = {}) initialization..'.format(ip))
 
       self.ip = ip
       self.ssdp_version = 1
