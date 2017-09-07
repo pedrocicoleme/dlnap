@@ -126,6 +126,7 @@ def _get_tag_value(x, i = 0):
       i += 1
    return (tag.strip(), value[:-1], x[i+1:])
 
+
 def _xml2dict(s, ignoreUntilXML = False):
     """ Convert xml to dictionary.
 
@@ -190,6 +191,7 @@ s = """
       <g>value</g>
    </a>
 """
+
 
 def _xpath(d, path):
     """ Return value from xml dictionary at path.
@@ -292,7 +294,8 @@ class DownloadProxy(BaseHTTPRequestHandler):
             running = False
             f.close()
 
-def runProxy(ip = '', port = 8000):
+
+def runProxy(ip='', port=8000):
     global running
     running = True
     DownloadProxy.protocol_version = "HTTP/1.0"
@@ -303,6 +306,7 @@ def runProxy(ip = '', port = 8000):
 #
 # PROXY
 # =================================================================================================
+
 
 def _get_port(location):
     """ Extract port number from url.
@@ -322,6 +326,7 @@ def _get_control_url(xml, urn):
     """
     return _xpath(xml, 'root/device/serviceList/service@serviceType={}/controlURL'.format(urn))
 
+
 @contextmanager
 def _send_udp(to, packet):
     """ Send UDP message to group
@@ -334,10 +339,12 @@ def _send_udp(to, packet):
     yield sock
     sock.close()
 
+
 def _unescape_xml(xml):
    """ Replace escaped xml symbols with real ones.
    """
    return xml.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
+
 
 def _send_tcp(to, payload):
     """ Send TCP message to group
@@ -377,6 +384,7 @@ def _get_location_url(raw):
         return t[0]
     return ''
 
+
 def _get_friendly_name(xml):
     """ Extract device name from description xml
 
@@ -385,6 +393,7 @@ def _get_friendly_name(xml):
     """
     name = _xpath(xml, 'root/device/friendlyName')
     return name if name is not None else 'Unknown'
+
 
 class DlnapDevice:
     """ Represents DLNA/UPnP device.
@@ -465,7 +474,8 @@ class DlnapDevice:
     def __eq__(self, d):
         return self.name == d.name and self.ip == d.ip
 
-    def _payload_from_template(self, action, data, urn):
+    @staticmethod
+    def _payload_from_template(action, data, urn):
         """ Assembly payload from template.
         """
         fields = ''
@@ -534,30 +544,32 @@ class DlnapDevice:
                 self.__logger.debug(data.decode())
                 response = xmltodict.parse(data)
                 try:
-                    errorDescription = response['s:Envelope']['s:Body']['s:Fault']['detail']['UPnPError']['errorDescription']
-                    logging.error(errorDescription)
-                    return
+                    error_description = response['s:Envelope']['s:Body']['s:Fault']['detail']['UPnPError']['errorDescription']
+                    logging.error(error_description)
+                    return None
                 except:
-                    pass
+                    return None
                 return response
             # data = _unescape_xml(data)
         except Exception as e:
             logging.error(e)
 
-    def set_current_media(self, url, instance_id = 0):
+    def set_current_media(self, url, instance_id=0):
         """ Set media to playback.
 
         url -- media url
         instance_id -- device instance id
         """
-        response = self._soap_request('SetAVTransportURI', {'InstanceID':instance_id, 'CurrentURI':url, 'CurrentURIMetaData':'' })
+        response = self._soap_request('SetAVTransportURI',
+                                      {'InstanceID': instance_id, 'CurrentURI': url, 'CurrentURIMetaData': ''})
         try:
             response['s:Envelope']['s:Body']['u:SetAVTransportURIResponse']
             return True
         except:
+            # Unexpected response
             return False
 
-    def play(self, instance_id = 0):
+    def play(self, instance_id=0):
         """ Play media that was already set as current.
 
         instance_id -- device instance id
@@ -567,14 +579,15 @@ class DlnapDevice:
             response['s:Envelope']['s:Body']['u:PlayResponse']
             return True
         except:
+            # Unexpected response
             return False
 
-    def pause(self, instance_id = 0):
+    def pause(self, instance_id=0):
         """ Pause media that is currently playing back.
 
         instance_id -- device instance id
         """
-        response = self._soap_request('Pause', {'InstanceID': instance_id, 'Speed':1})
+        response = self._soap_request('Pause', {'InstanceID': instance_id, 'Speed': 1})
         try:
             response['s:Envelope']['s:Body']['u:PauseResponse']
             return True
@@ -583,7 +596,7 @@ class DlnapDevice:
         # packet = self._create_packet('Pause', {'InstanceID': instance_id, 'Speed':1})
         # _send_tcp((self.ip, self.port), packet)
 
-    def stop(self, instance_id = 0):
+    def stop(self, instance_id=0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
@@ -597,33 +610,30 @@ class DlnapDevice:
         # packet = self._create_packet('Stop', {'InstanceID': instance_id, 'Speed': 1})
         # _send_tcp((self.ip, self.port), packet)
 
-
-    def seek(self, position, instance_id = 0):
+    def seek(self, position, instance_id=0):
         """
         Seek position
         """
-        packet = self._create_packet('Seek', {'InstanceID':instance_id, 'Unit':'REL_TIME', 'Target': position })
+        packet = self._create_packet('Seek', {'InstanceID': instance_id, 'Unit': 'REL_TIME', 'Target': position})
         _send_tcp((self.ip, self.port), packet)
 
-
-    def volume(self, volume=10, instance_id = 0):
+    def volume(self, volume=10, instance_id=0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
         """
-        packet = self._create_packet('SetVolume', {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
+        packet = self._create_packet('SetVolume',
+                                     {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
         _send_tcp((self.ip, self.port), packet)
-      
-      
-    def get_volume(self, instance_id = 0):
+
+    def get_volume(self, instance_id=0):
         """
         get volume
         """
-        packet = self._create_packet('GetVolume', {'InstanceID':instance_id, 'Channel': 'Master'})
+        packet = self._create_packet('GetVolume', {'InstanceID': instance_id, 'Channel': 'Master'})
         return _send_tcp((self.ip, self.port), packet)
 
-
-    def mute(self, instance_id = 0):
+    def mute(self, instance_id=0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
@@ -631,7 +641,7 @@ class DlnapDevice:
         packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
         _send_tcp((self.ip, self.port), packet)
 
-    def unmute(self, instance_id = 0):
+    def unmute(self, instance_id=0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
@@ -655,7 +665,6 @@ class DlnapDevice:
         packet = self._create_packet('GetMediaInfo', {'InstanceID': instance_id})
         return _send_tcp((self.ip, self.port), packet)
 
-
     def position_info(self, instance_id=0):
         """ Position info.
         instance_id -- device instance id
@@ -663,8 +672,6 @@ class DlnapDevice:
         xml = self._soap_request('GetPositionInfo', {'InstanceID': instance_id})
         if xml:
             return dict(xml['s:Envelope']['s:Body']['u:GetPositionInfoResponse'])
-            
-
 
     def set_next(self, url):
         pass
@@ -673,7 +680,7 @@ class DlnapDevice:
         pass
 
 
-def discover(name = '', ip = '', timeout = 1, st = SSDP_ALL, mx = 3, ssdp_version = 1):
+def discover(name='', ip='', timeout=1, st=SSDP_ALL, mx=3, ssdp_version=1):
     """ Discover UPnP devices in the local network.
 
     name -- name or part of the name to filter devices
