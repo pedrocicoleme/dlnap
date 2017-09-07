@@ -548,8 +548,7 @@ class DlnapDevice:
                     logging.error(error_description)
                     return None
                 except:
-                    return None
-                return response
+                    return response
             # data = _unescape_xml(data)
         except Exception as e:
             logging.error(e)
@@ -594,8 +593,6 @@ class DlnapDevice:
         except:
             # Unexpected response
             return False
-        # packet = self._create_packet('Pause', {'InstanceID': instance_id, 'Speed':1})
-        # _send_tcp((self.ip, self.port), packet)
 
     def stop(self, instance_id=0):
         """ Stop media that is currently playing back.
@@ -609,8 +606,6 @@ class DlnapDevice:
         except:
             # Unexpected response
             return False
-        # packet = self._create_packet('Stop', {'InstanceID': instance_id, 'Speed': 1})
-        # _send_tcp((self.ip, self.port), packet)
 
     def seek(self, position, instance_id=0):
         """
@@ -623,8 +618,6 @@ class DlnapDevice:
         except:
             # Unexpected response
             return False
-        # packet = self._create_packet('Seek', {'InstanceID': instance_id, 'Unit': 'REL_TIME', 'Target': position})
-        # _send_tcp((self.ip, self.port), packet)
 
     def volume(self, volume=10, instance_id=0):
         """ Stop media that is currently playing back.
@@ -634,28 +627,19 @@ class DlnapDevice:
         response = self._soap_request('SetVolume',
                                      {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
         try:
-            response['s:Envelope']['s:Body']['u:SeekResponse']
+            response['s:Envelope']['s:Body']['u:SetVolumeResponse']
             return True
         except:
             # Unexpected response
             return False
-        # packet = self._create_packet('SetVolume',
-                                     # {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
-        # _send_tcp((self.ip, self.port), packet)
 
     def get_volume(self, instance_id=0):
         """
         get volume
         """
         response = self._soap_request('GetVolume', {'InstanceID': instance_id, 'Channel': 'Master'})
-        try:
-            response['s:Envelope']['s:Body']['u:SeekResponse']
-            return True
-        except:
-            # Unexpected response
-            return False
-        # packet = self._create_packet('GetVolume', {'InstanceID': instance_id, 'Channel': 'Master'})
-        # return _send_tcp((self.ip, self.port), packet)
+        if response:
+            return response['s:Envelope']['s:Body']['u:GetVolumeResponse']['CurrentVolume']
 
     def mute(self, instance_id=0):
         """ Stop media that is currently playing back.
@@ -664,13 +648,11 @@ class DlnapDevice:
         """
         response = self._soap_request('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
         try:
-            response['s:Envelope']['s:Body']['u:SeekResponse']
+            response['s:Envelope']['s:Body']['u:SetMuteResponse']
             return True
         except:
             # Unexpected response
             return False
-        # packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
-        # _send_tcp((self.ip, self.port), packet)
 
     def unmute(self, instance_id=0):
         """ Stop media that is currently playing back.
@@ -679,13 +661,11 @@ class DlnapDevice:
         """
         response = self._soap_request('SetMute', {'InstanceID': instance_id, 'DesiredMute': '0', 'Channel': 'Master'})
         try:
-            response['s:Envelope']['s:Body']['u:SeekResponse']
+            response['s:Envelope']['s:Body']['u:SetMuteResponse']
             return True
         except:
             # Unexpected response
             return False
-        # packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '0', 'Channel': 'Master'})
-        # _send_tcp((self.ip, self.port), packet)
 
     def info(self, instance_id=0):
         """ Transport info.
@@ -694,9 +674,7 @@ class DlnapDevice:
         """
         response = self._soap_request('GetTransportInfo', {'InstanceID': instance_id})
         if response:
-            return response
-        # packet = self._create_packet('GetTransportInfo', {'InstanceID': instance_id})
-        # return _send_tcp((self.ip, self.port), packet)
+            return dict(response['s:Envelope']['s:Body']['u:GetTransportInfoResponse'])
 
     def media_info(self, instance_id=0):
         """ Media info.
@@ -705,7 +683,7 @@ class DlnapDevice:
         """
         response = self._soap_request('GetMediaInfo', {'InstanceID': instance_id})
         if response:
-            return response
+            return dict(response['s:Envelope']['s:Body']['u:GetMediaInfoResponse'])
         # packet = self._create_packet('GetMediaInfo', {'InstanceID': instance_id})
         # return _send_tcp((self.ip, self.port), packet)
 
