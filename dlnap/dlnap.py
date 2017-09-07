@@ -574,16 +574,28 @@ class DlnapDevice:
 
         instance_id -- device instance id
         """
-        packet = self._create_packet('Pause', {'InstanceID': instance_id, 'Speed':1})
-        _send_tcp((self.ip, self.port), packet)
+        response = self._soap_request('Pause', {'InstanceID': instance_id, 'Speed':1})
+        try:
+            response['s:Envelope']['s:Body']['u:PauseResponse']
+            return True
+        except:
+            return False
+        # packet = self._create_packet('Pause', {'InstanceID': instance_id, 'Speed':1})
+        # _send_tcp((self.ip, self.port), packet)
 
     def stop(self, instance_id = 0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
         """
-        packet = self._create_packet('Stop', {'InstanceID': instance_id, 'Speed': 1})
-        _send_tcp((self.ip, self.port), packet)
+        response = self._soap_request('Stop', {'InstanceID': instance_id, 'Speed': 1})
+        try:
+            response['s:Envelope']['s:Body']['u:StopResponse']
+            return True
+        except:
+            return False
+        # packet = self._create_packet('Stop', {'InstanceID': instance_id, 'Speed': 1})
+        # _send_tcp((self.ip, self.port), packet)
 
 
     def seek(self, position, instance_id = 0):
