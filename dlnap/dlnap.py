@@ -425,7 +425,11 @@ class DlnapDevice:
             desc_xml = xmltodict.parse(raw_desc_xml)
             self.__logger.debug('description xml: {}'.format(desc_xml))
             
-            self.name = desc_xml['root']['device']['friendlyName']
+            try:
+                self.name = desc_xml['root']['device']['friendlyName']
+            except Exception as e:
+                self.__logger.warning('DlnapDevice friendlyName retrive failed:\n{}'.format(traceback.format_exc()))
+                self.name = 'Unknown'
             self.__logger.info('friendlyName: {}'.format(self.name))
 
             services_url = {i['serviceType']:i['controlURL'] for i in desc_xml['root']['device']['serviceList']['service']}
@@ -435,20 +439,7 @@ class DlnapDevice:
 
             self.rendering_control_url = services_url[URN_RenderingControl]
             self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
-            
-            # tree_desc_xml = etree.XML(raw_desc_xml_new)
-            # ns_desc_xml = tree_desc_xml.nsmap
-            # ns_desc_xml['default'] = ns_desc_xml[None]
-            # ns_desc_xml.pop(None, None)
 
-            # self.name = tree_desc_xml.xpath('./default:device/default:friendlyName', namespaces = ns_desc_xml)[0].text
-            # self.__logger.info('friendlyName: {}'.format(self.name))
-
-            # self.control_url = tree_desc_xml.xpath('./default:device/default:serviceList/default:service[default:serviceType="{}"]/default:controlURL'.format(URN_AVTransport), namespaces = ns_desc_xml)[0].text
-            # self.__logger.info('control_url: {}'.format(self.control_url))
-
-            # self.rendering_control_url = tree_desc_xml.xpath('./default:device/default:serviceList/default:service[default:serviceType="{}"]/default:controlURL'.format(URN_RenderingControl), namespaces = ns_desc_xml)[0].text
-            # self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
 ############---end---############
 
             # self.__desc_xml = _xml2dict(raw_desc_xml)
