@@ -64,133 +64,133 @@ SSDP_ALL = "ssdp:all"
 # =================================================================================================
 # XML to DICT
 #
-def _get_tag_value(x, i = 0):
-   """ Get the nearest to 'i' position xml tag name.
+# def _get_tag_value(x, i = 0):
+   # """ Get the nearest to 'i' position xml tag name.
 
-   x -- xml string
-   i -- position to start searching tag from
-   return -- (tag, value) pair.
-      e.g
-         <d>
-            <e>value4</e>
-         </d>
-      result is ('d', '<e>value4</e>')
-   """
-   x = x.strip()
-   value = ''
-   tag = ''
+   # x -- xml string
+   # i -- position to start searching tag from
+   # return -- (tag, value) pair.
+      # e.g
+         # <d>
+            # <e>value4</e>
+         # </d>
+      # result is ('d', '<e>value4</e>')
+   # """
+   # x = x.strip()
+   # value = ''
+   # tag = ''
 
-   # skip <? > tag
-   if x[i:].startswith('<?'):
-      i += 2
-      while i < len(x) and x[i] != '<':
-         i += 1
+   # # skip <? > tag
+   # if x[i:].startswith('<?'):
+      # i += 2
+      # while i < len(x) and x[i] != '<':
+         # i += 1
 
-   # check for empty tag like '</tag>'
-   if x[i:].startswith('</'):
-      i += 2
-      in_attr = False
-      while i < len(x) and x[i] != '>':
-         if x[i] == ' ':
-            in_attr = True
-         if not in_attr:
-            tag += x[i]
-         i += 1
-      return (tag.strip(), '', x[i+1:])
+   # # check for empty tag like '</tag>'
+   # if x[i:].startswith('</'):
+      # i += 2
+      # in_attr = False
+      # while i < len(x) and x[i] != '>':
+         # if x[i] == ' ':
+            # in_attr = True
+         # if not in_attr:
+            # tag += x[i]
+         # i += 1
+      # return (tag.strip(), '', x[i+1:])
 
-   # not an xml, treat like a value
-   if not x[i:].startswith('<'):
-      return ('', x[i:], '')
+   # # not an xml, treat like a value
+   # if not x[i:].startswith('<'):
+      # return ('', x[i:], '')
 
-   i += 1 # <
+   # i += 1 # <
 
-   # read first open tag
-   in_attr = False
-   while i < len(x) and x[i] != '>':
-      # get rid of attributes
-      if x[i] == ' ':
-         in_attr = True
-      if not in_attr:
-         tag += x[i]
-      i += 1
+   # # read first open tag
+   # in_attr = False
+   # while i < len(x) and x[i] != '>':
+      # # get rid of attributes
+      # if x[i] == ' ':
+         # in_attr = True
+      # if not in_attr:
+         # tag += x[i]
+      # i += 1
 
-   i += 1 # >
+   # i += 1 # >
 
-   while i < len(x):
-      value += x[i]
-      if x[i] == '>' and value.endswith('</' + tag + '>'):
-         # Note: will not work with xml like <a> <a></a> </a>
-         close_tag_len = len(tag) + 2 # />
-         value = value[:-close_tag_len]
-         break
-      i += 1
-   return (tag.strip(), value[:-1], x[i+1:])
+   # while i < len(x):
+      # value += x[i]
+      # if x[i] == '>' and value.endswith('</' + tag + '>'):
+         # # Note: will not work with xml like <a> <a></a> </a>
+         # close_tag_len = len(tag) + 2 # />
+         # value = value[:-close_tag_len]
+         # break
+      # i += 1
+   # return (tag.strip(), value[:-1], x[i+1:])
 
 
-def _xml2dict(s, ignoreUntilXML = False):
-    """ Convert xml to dictionary.
+# def _xml2dict(s, ignoreUntilXML = False):
+    # """ Convert xml to dictionary.
 
-    <?xml version="1.0"?>
-    <a any_tag="tag value">
-      <b> <bb>value1</bb> </b>
-      <b> <bb>value2</bb> </b>
-      </c>
-      <d>
-         <e>value4</e>
-      </d>
-      <g>value</g>
-    </a>
+    # <?xml version="1.0"?>
+    # <a any_tag="tag value">
+      # <b> <bb>value1</bb> </b>
+      # <b> <bb>value2</bb> </b>
+      # </c>
+      # <d>
+         # <e>value4</e>
+      # </d>
+      # <g>value</g>
+    # </a>
 
-    =>
+    # =>
 
-    { 'a':
-     {
-         'b': [ {'bb':value1}, {'bb':value2} ],
-         'c': [],
-         'd':
-         {
-           'e': [value4]
-         },
-         'g': [value]
-     }
-    }
-    """
-    if ignoreUntilXML:
-        s = ''.join(re.findall(".*?(<.*)", s, re.M))
+    # { 'a':
+     # {
+         # 'b': [ {'bb':value1}, {'bb':value2} ],
+         # 'c': [],
+         # 'd':
+         # {
+           # 'e': [value4]
+         # },
+         # 'g': [value]
+     # }
+    # }
+    # """
+    # if ignoreUntilXML:
+        # s = ''.join(re.findall(".*?(<.*)", s, re.M))
 
-    d = {}
-    while s:
-        tag, value, s = _get_tag_value(s)
-        value = value.strip()
-        isXml, dummy, dummy2 = _get_tag_value(value)
-        if tag not in d:
-            d[tag] = []
-        if not isXml:
-            if not value:
-                continue
-            d[tag].append(value.strip())
-        else:
-            if tag not in d:
-                d[tag] = []
-            d[tag].append(_xml2dict(value))
-    return d
+    # d = {}
+    # while s:
+        # tag, value, s = _get_tag_value(s)
+        # value = value.strip()
+        # isXml, dummy, dummy2 = _get_tag_value(value)
+        # if tag not in d:
+            # d[tag] = []
+        # if not isXml:
+            # if not value:
+                # continue
+            # d[tag].append(value.strip())
+        # else:
+            # if tag not in d:
+                # d[tag] = []
+            # d[tag].append(_xml2dict(value))
+    # return d
 
-s = """
-   hello
-   this is a bad
-   strings
+# s = """
+   # hello
+   # this is a bad
+   # strings
 
-   <?xml version="1.0"?>
-   <a any_tag="tag value">
-      <b><bb>value1</bb></b>
-      <b><bb>value2</bb> <v>value3</v></b>
-      </c>
-      <d>
-         <e>value4</e>
-      </d>
-      <g>value</g>
-   </a>
-"""
+   # <?xml version="1.0"?>
+   # <a any_tag="tag value">
+      # <b><bb>value1</bb></b>
+      # <b><bb>value2</bb> <v>value3</v></b>
+      # </c>
+      # <d>
+         # <e>value4</e>
+      # </d>
+      # <g>value</g>
+   # </a>
+# """
 
 
 def _xpath(d, path):
@@ -346,31 +346,31 @@ def _unescape_xml(xml):
    return xml.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
 
 
-def _send_tcp(to, payload):
-    """ Send TCP message to group
+# def _send_tcp(to, payload):
+    # """ Send TCP message to group
 
-    to -- (host, port) group to send to payload to
-    payload -- message to send
-    """
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5)
-        sock.connect(to)
-        sock.sendall(payload.encode('utf-8'))
+    # to -- (host, port) group to send to payload to
+    # payload -- message to send
+    # """
+    # try:
+        # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # sock.settimeout(5)
+        # sock.connect(to)
+        # sock.sendall(payload.encode('utf-8'))
 
-        data = sock.recv(2048)
-        if py3:
-            data = data.decode('utf-8')
-        data = _xml2dict(_unescape_xml(data), True)
+        # data = sock.recv(2048)
+        # if py3:
+            # data = data.decode('utf-8')
+        # data = _xml2dict(_unescape_xml(data), True)
 
-        errorDescription = _xpath(data, 's:Envelope/s:Body/s:Fault/detail/UPnPError/errorDescription')
-        if errorDescription is not None:
-            logging.error(errorDescription)
-    except Exception as e:
-        data = ''
-    finally:
-        sock.close()
-    return data
+        # errorDescription = _xpath(data, 's:Envelope/s:Body/s:Fault/detail/UPnPError/errorDescription')
+        # if errorDescription is not None:
+            # logging.error(errorDescription)
+    # except Exception as e:
+        # data = ''
+    # finally:
+        # sock.close()
+    # return data
 
 
 def _get_location_url(raw):
@@ -431,17 +431,17 @@ class DlnapDevice:
 
             # raw_desc_xml_new = urlopen(self.location).read()
 
-            desc_xml = xmltodict.parse(raw_desc_xml)
-            self.__logger.debug('description xml: {}'.format(desc_xml))
+            desc_dict = xmltodict.parse(raw_desc_xml)
+            self.__logger.debug('description xml: {}'.format(desc_dict))
             
             try:
-                self.name = desc_xml['root']['device']['friendlyName']
+                self.name = desc_dict['root']['device']['friendlyName']
             except Exception as e:
                 self.__logger.warning('DlnapDevice friendlyName retrive failed:\n{}'.format(traceback.format_exc()))
                 self.name = 'Unknown'
             self.__logger.info('friendlyName: {}'.format(self.name))
 
-            services_url = {i['serviceType']:i['controlURL'] for i in desc_xml['root']['device']['serviceList']['service']}
+            services_url = {i['serviceType']:i['controlURL'] for i in desc_dict['root']['device']['serviceList']['service']}
 
             self.control_url = services_url[URN_AVTransport]
             self.__logger.info('control_url: {}'.format(self.control_url))
@@ -491,35 +491,35 @@ class DlnapDevice:
          </s:Envelope>""".format(action=action, urn=urn, fields=fields)
         return payload
 
-    def _create_packet(self, action, data):
-        """ Create packet to send to device control url.
+    # def _create_packet(self, action, data):
+        # """ Create packet to send to device control url.
 
-        action -- control action
-        data -- dictionary with XML fields value
-        """
-        if action in ["SetVolume", "SetMute", "GetVolume"]:
-            url = self.rendering_control_url
-            urn = URN_RenderingControl_Fmt.format(self.ssdp_version)
-        else:
-            url = self.control_url
-            urn = URN_AVTransport_Fmt.format(self.ssdp_version)
-        payload = self._payload_from_template(action=action, data=data, urn=urn)
+        # action -- control action
+        # data -- dictionary with XML fields value
+        # """
+        # if action in ["SetVolume", "SetMute", "GetVolume"]:
+            # url = self.rendering_control_url
+            # urn = URN_RenderingControl_Fmt.format(self.ssdp_version)
+        # else:
+            # url = self.control_url
+            # urn = URN_AVTransport_Fmt.format(self.ssdp_version)
+        # payload = self._payload_from_template(action=action, data=data, urn=urn)
 
-        packet = "\r\n".join([
-            'POST {} HTTP/1.1'.format(url),
-            'User-Agent: {}/{}'.format(__file__, __version__),
-            'Accept: */*',
-            'Content-Type: text/xml; charset="utf-8"',
-            'HOST: {}:{}'.format(self.ip, self.port),
-            'Content-Length: {}'.format(len(payload)),
-            'SOAPACTION: "{}#{}"'.format(urn, action),
-            'Connection: close',
-            '',
-            payload,
-            ])
+        # packet = "\r\n".join([
+            # 'POST {} HTTP/1.1'.format(url),
+            # 'User-Agent: {}/{}'.format(__file__, __version__),
+            # 'Accept: */*',
+            # 'Content-Type: text/xml; charset="utf-8"',
+            # 'HOST: {}:{}'.format(self.ip, self.port),
+            # 'Content-Length: {}'.format(len(payload)),
+            # 'SOAPACTION: "{}#{}"'.format(urn, action),
+            # 'Connection: close',
+            # '',
+            # payload,
+            # ])
 
-        self.__logger.debug(packet)
-        return packet
+        # self.__logger.debug(packet)
+        # return packet
 
     def _soap_request(self, action, data):
         if action in ["SetVolume", "SetMute", "GetVolume"]:
@@ -592,6 +592,7 @@ class DlnapDevice:
             response['s:Envelope']['s:Body']['u:PauseResponse']
             return True
         except:
+            # Unexpected response
             return False
         # packet = self._create_packet('Pause', {'InstanceID': instance_id, 'Speed':1})
         # _send_tcp((self.ip, self.port), packet)
@@ -606,6 +607,7 @@ class DlnapDevice:
             response['s:Envelope']['s:Body']['u:StopResponse']
             return True
         except:
+            # Unexpected response
             return False
         # packet = self._create_packet('Stop', {'InstanceID': instance_id, 'Speed': 1})
         # _send_tcp((self.ip, self.port), packet)
@@ -614,64 +616,106 @@ class DlnapDevice:
         """
         Seek position
         """
-        packet = self._create_packet('Seek', {'InstanceID': instance_id, 'Unit': 'REL_TIME', 'Target': position})
-        _send_tcp((self.ip, self.port), packet)
+        response = self._soap_request('Seek', {'InstanceID': instance_id, 'Unit': 'REL_TIME', 'Target': position})
+        try:
+            response['s:Envelope']['s:Body']['u:SeekResponse']
+            return True
+        except:
+            # Unexpected response
+            return False
+        # packet = self._create_packet('Seek', {'InstanceID': instance_id, 'Unit': 'REL_TIME', 'Target': position})
+        # _send_tcp((self.ip, self.port), packet)
 
     def volume(self, volume=10, instance_id=0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
         """
-        packet = self._create_packet('SetVolume',
+        response = self._soap_request('SetVolume',
                                      {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
-        _send_tcp((self.ip, self.port), packet)
+        try:
+            response['s:Envelope']['s:Body']['u:SeekResponse']
+            return True
+        except:
+            # Unexpected response
+            return False
+        # packet = self._create_packet('SetVolume',
+                                     # {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
+        # _send_tcp((self.ip, self.port), packet)
 
     def get_volume(self, instance_id=0):
         """
         get volume
         """
-        packet = self._create_packet('GetVolume', {'InstanceID': instance_id, 'Channel': 'Master'})
-        return _send_tcp((self.ip, self.port), packet)
+        response = self._soap_request('GetVolume', {'InstanceID': instance_id, 'Channel': 'Master'})
+        try:
+            response['s:Envelope']['s:Body']['u:SeekResponse']
+            return True
+        except:
+            # Unexpected response
+            return False
+        # packet = self._create_packet('GetVolume', {'InstanceID': instance_id, 'Channel': 'Master'})
+        # return _send_tcp((self.ip, self.port), packet)
 
     def mute(self, instance_id=0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
         """
-        packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
-        _send_tcp((self.ip, self.port), packet)
+        response = self._soap_request('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
+        try:
+            response['s:Envelope']['s:Body']['u:SeekResponse']
+            return True
+        except:
+            # Unexpected response
+            return False
+        # packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
+        # _send_tcp((self.ip, self.port), packet)
 
     def unmute(self, instance_id=0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
         """
-        packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '0', 'Channel': 'Master'})
-        _send_tcp((self.ip, self.port), packet)
+        response = self._soap_request('SetMute', {'InstanceID': instance_id, 'DesiredMute': '0', 'Channel': 'Master'})
+        try:
+            response['s:Envelope']['s:Body']['u:SeekResponse']
+            return True
+        except:
+            # Unexpected response
+            return False
+        # packet = self._create_packet('SetMute', {'InstanceID': instance_id, 'DesiredMute': '0', 'Channel': 'Master'})
+        # _send_tcp((self.ip, self.port), packet)
 
     def info(self, instance_id=0):
         """ Transport info.
 
         instance_id -- device instance id
         """
-        packet = self._create_packet('GetTransportInfo', {'InstanceID': instance_id})
-        return _send_tcp((self.ip, self.port), packet)
+        response = self._soap_request('GetTransportInfo', {'InstanceID': instance_id})
+        if response:
+            return response
+        # packet = self._create_packet('GetTransportInfo', {'InstanceID': instance_id})
+        # return _send_tcp((self.ip, self.port), packet)
 
     def media_info(self, instance_id=0):
         """ Media info.
 
         instance_id -- device instance id
         """
-        packet = self._create_packet('GetMediaInfo', {'InstanceID': instance_id})
-        return _send_tcp((self.ip, self.port), packet)
+        response = self._soap_request('GetMediaInfo', {'InstanceID': instance_id})
+        if response:
+            return response
+        # packet = self._create_packet('GetMediaInfo', {'InstanceID': instance_id})
+        # return _send_tcp((self.ip, self.port), packet)
 
     def position_info(self, instance_id=0):
         """ Position info.
         instance_id -- device instance id
         """
-        xml = self._soap_request('GetPositionInfo', {'InstanceID': instance_id})
-        if xml:
-            return dict(xml['s:Envelope']['s:Body']['u:GetPositionInfoResponse'])
+        response = self._soap_request('GetPositionInfo', {'InstanceID': instance_id})
+        if response:
+            return dict(response['s:Envelope']['s:Body']['u:GetPositionInfoResponse'])
 
     def set_next(self, url):
         pass
