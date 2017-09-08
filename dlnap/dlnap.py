@@ -318,13 +318,25 @@ def _get_port(location):
     return int(port[0]) if port else 80
 
 
-def _get_control_url(xml, urn):
+# def _get_control_url(xml, urn):
+    # """ Extract AVTransport contol url from device description xml
+
+    # xml -- device description xml
+    # return -- control url or empty string if wasn't found
+    # """
+    # return _xpath(xml, 'root/device/serviceList/service@serviceType={}/controlURL'.format(urn))
+
+
+def _get_control_urls(xml):
     """ Extract AVTransport contol url from device description xml
 
     xml -- device description xml
     return -- control url or empty string if wasn't found
     """
-    return _xpath(xml, 'root/device/serviceList/service@serviceType={}/controlURL'.format(urn))
+    try:
+        return {i['serviceType']:i['controlURL'] for i in xml['root']['device']['serviceList']['service']}
+    except:
+        return
 
 
 @contextmanager
@@ -385,14 +397,25 @@ def _get_location_url(raw):
     return ''
 
 
+# def _get_friendly_name(xml):
+    # """ Extract device name from description xml
+
+    # xml -- device description xml
+    # return -- device name
+    # """
+    # name = _xpath(xml, 'root/device/friendlyName')
+    # return name if name is not None else 'Unknown'
+
 def _get_friendly_name(xml):
     """ Extract device name from description xml
 
     xml -- device description xml
     return -- device name
     """
-    name = _xpath(xml, 'root/device/friendlyName')
-    return name if name is not None else 'Unknown'
+    try:
+        return xml['root']['device']['friendlyName']
+    except Exception as e:
+        return 'Unknown'
 
 
 class DlnapDevice:
@@ -421,46 +444,25 @@ class DlnapDevice:
             self.__logger.info('port: {}'.format(self.port))
 
             raw_desc_xml = urlopen(self.location, timeout=5).read().decode()
-############---new---############
-            # test only
+
+            # # # test only
             # os.chdir(os.path.dirname(os.path.abspath(__file__)))  # set file path as current
             # raw_desc_xml = open('description.xml').read()
-            # raw_desc_xml_new = raw_desc_xml.encode()
-            # test end
-
-            # raw_desc_xml_new = urlopen(self.location).read()
+            # # # test end
 
             desc_dict = xmltodict.parse(raw_desc_xml)
             self.__logger.debug('description xml: {}'.format(desc_dict))
-            
-            try:
-                self.name = desc_dict['root']['device']['friendlyName']
-            except Exception as e:
-                self.__logger.warning('DlnapDevice friendlyName retrive failed:\n{}'.format(traceback.format_exc()))
-                self.name = 'Unknown'
+
+            self.name = _get_friendly_name(desc_dict)
             self.__logger.info('friendlyName: {}'.format(self.name))
 
-            services_url = {i['serviceType']:i['controlURL'] for i in desc_dict['root']['device']['serviceList']['service']}
-
+            services_url = _get_control_urls(desc_dict)
+            
             self.control_url = services_url[URN_AVTransport]
             self.__logger.info('control_url: {}'.format(self.control_url))
 
             self.rendering_control_url = services_url[URN_RenderingControl]
             self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
-
-############---end---############
-
-            # self.__desc_xml = _xml2dict(raw_desc_xml)
-            # self.__logger.debug('description xml: {}'.format(self.__desc_xml))
-
-            # self.name = _get_friendly_name(self.__desc_xml)
-            # self.__logger.info('friendlyName: {}'.format(self.name))
-
-            # self.control_url = _get_control_url(self.__desc_xml, URN_AVTransport)
-            # self.__logger.info('control_url: {}'.format(self.control_url))
-
-            # self.rendering_control_url = _get_control_url(self.__desc_xml, URN_RenderingControl)
-            # self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
 
             self.has_av_transport = self.control_url is not None
             self.__logger.info('=> Initialization completed'.format(ip))
@@ -521,6 +523,11 @@ class DlnapDevice:
         # return packet
 
     def _soap_request(self, action, data):
+        """ Send SOAP Request to DMR devices
+
+        action -- control action
+        data -- dictionary with XML fields value
+        """
         if action in ["SetVolume", "SetMute", "GetVolume"]:
             url = self.rendering_control_url
             # urn = URN_RenderingControl_Fmt.format(self.ssdp_version)
