@@ -190,7 +190,7 @@ def _send_udp(to, packet):
 def _unescape_xml(xml):
    """ Replace escaped xml symbols with real ones.
    """
-   return xml.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
+   return xml.decode().replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
 
 
 def _get_location_url(raw):
