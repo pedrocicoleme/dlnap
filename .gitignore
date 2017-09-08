@@ -1,2 +1,3 @@
 *.pyc
 dlnap/testdlna.py
+*.xml
