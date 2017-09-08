@@ -62,167 +62,11 @@ URN_RenderingControl = "urn:schemas-upnp-org:service:RenderingControl:1"
 SSDP_ALL = "ssdp:all"
 
 # =================================================================================================
-# XML to DICT
-#
-# def _get_tag_value(x, i = 0):
-   # """ Get the nearest to 'i' position xml tag name.
-
-   # x -- xml string
-   # i -- position to start searching tag from
-   # return -- (tag, value) pair.
-      # e.g
-         # <d>
-            # <e>value4</e>
-         # </d>
-      # result is ('d', '<e>value4</e>')
-   # """
-   # x = x.strip()
-   # value = ''
-   # tag = ''
-
-   # # skip <? > tag
-   # if x[i:].startswith('<?'):
-      # i += 2
-      # while i < len(x) and x[i] != '<':
-         # i += 1
-
-   # # check for empty tag like '</tag>'
-   # if x[i:].startswith('</'):
-      # i += 2
-      # in_attr = False
-      # while i < len(x) and x[i] != '>':
-         # if x[i] == ' ':
-            # in_attr = True
-         # if not in_attr:
-            # tag += x[i]
-         # i += 1
-      # return (tag.strip(), '', x[i+1:])
-
-   # # not an xml, treat like a value
-   # if not x[i:].startswith('<'):
-      # return ('', x[i:], '')
-
-   # i += 1 # <
-
-   # # read first open tag
-   # in_attr = False
-   # while i < len(x) and x[i] != '>':
-      # # get rid of attributes
-      # if x[i] == ' ':
-         # in_attr = True
-      # if not in_attr:
-         # tag += x[i]
-      # i += 1
-
-   # i += 1 # >
-
-   # while i < len(x):
-      # value += x[i]
-      # if x[i] == '>' and value.endswith('</' + tag + '>'):
-         # # Note: will not work with xml like <a> <a></a> </a>
-         # close_tag_len = len(tag) + 2 # />
-         # value = value[:-close_tag_len]
-         # break
-      # i += 1
-   # return (tag.strip(), value[:-1], x[i+1:])
-
-
-# def _xml2dict(s, ignoreUntilXML = False):
-    # """ Convert xml to dictionary.
-
-    # <?xml version="1.0"?>
-    # <a any_tag="tag value">
-      # <b> <bb>value1</bb> </b>
-      # <b> <bb>value2</bb> </b>
-      # </c>
-      # <d>
-         # <e>value4</e>
-      # </d>
-      # <g>value</g>
-    # </a>
-
-    # =>
-
-    # { 'a':
-     # {
-         # 'b': [ {'bb':value1}, {'bb':value2} ],
-         # 'c': [],
-         # 'd':
-         # {
-           # 'e': [value4]
-         # },
-         # 'g': [value]
-     # }
-    # }
-    # """
-    # if ignoreUntilXML:
-        # s = ''.join(re.findall(".*?(<.*)", s, re.M))
-
-    # d = {}
-    # while s:
-        # tag, value, s = _get_tag_value(s)
-        # value = value.strip()
-        # isXml, dummy, dummy2 = _get_tag_value(value)
-        # if tag not in d:
-            # d[tag] = []
-        # if not isXml:
-            # if not value:
-                # continue
-            # d[tag].append(value.strip())
-        # else:
-            # if tag not in d:
-                # d[tag] = []
-            # d[tag].append(_xml2dict(value))
-    # return d
-
-# s = """
-   # hello
-   # this is a bad
-   # strings
-
-   # <?xml version="1.0"?>
-   # <a any_tag="tag value">
-      # <b><bb>value1</bb></b>
-      # <b><bb>value2</bb> <v>value3</v></b>
-      # </c>
-      # <d>
-         # <e>value4</e>
-      # </d>
-      # <g>value</g>
-   # </a>
-# """
-
-
-def _xpath(d, path):
-    """ Return value from xml dictionary at path.
-
-    d -- xml dictionary
-    path -- string path like root/device/serviceList/service@serviceType=URN_AVTransport/controlURL
-    return -- value at path or None if path not found
-    """
-
-    for p in path.split('/'):
-        tag_attr = p.split('@')
-        tag = tag_attr[0]
-        if tag not in d:
-            return None
-
-        attr = tag_attr[1] if len(tag_attr) > 1 else ''
-        if attr:
-            a, aval = attr.split('=')
-            for s in d[tag]:
-                if s[a] == [aval]:
-                    d = s
-                    break
-        else:
-         d = d[tag][0]
-    return d
-#
-# XML to DICT
-# =================================================================================================
 # PROXY
 #
 running = False
+
+
 class DownloadProxy(BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
@@ -318,15 +162,6 @@ def _get_port(location):
     return int(port[0]) if port else 80
 
 
-# def _get_control_url(xml, urn):
-    # """ Extract AVTransport contol url from device description xml
-
-    # xml -- device description xml
-    # return -- control url or empty string if wasn't found
-    # """
-    # return _xpath(xml, 'root/device/serviceList/service@serviceType={}/controlURL'.format(urn))
-
-
 def _get_control_urls(xml):
     """ Extract AVTransport contol url from device description xml
 
@@ -358,33 +193,6 @@ def _unescape_xml(xml):
    return xml.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
 
 
-# def _send_tcp(to, payload):
-    # """ Send TCP message to group
-
-    # to -- (host, port) group to send to payload to
-    # payload -- message to send
-    # """
-    # try:
-        # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # sock.settimeout(5)
-        # sock.connect(to)
-        # sock.sendall(payload.encode('utf-8'))
-
-        # data = sock.recv(2048)
-        # if py3:
-            # data = data.decode('utf-8')
-        # data = _xml2dict(_unescape_xml(data), True)
-
-        # errorDescription = _xpath(data, 's:Envelope/s:Body/s:Fault/detail/UPnPError/errorDescription')
-        # if errorDescription is not None:
-            # logging.error(errorDescription)
-    # except Exception as e:
-        # data = ''
-    # finally:
-        # sock.close()
-    # return data
-
-
 def _get_location_url(raw):
     """ Extract device description url from discovery response
 
@@ -396,15 +204,6 @@ def _get_location_url(raw):
         return t[0]
     return ''
 
-
-# def _get_friendly_name(xml):
-    # """ Extract device name from description xml
-
-    # xml -- device description xml
-    # return -- device name
-    # """
-    # name = _xpath(xml, 'root/device/friendlyName')
-    # return name if name is not None else 'Unknown'
 
 def _get_friendly_name(xml):
     """ Extract device name from description xml
@@ -444,11 +243,6 @@ class DlnapDevice:
             self.__logger.info('port: {}'.format(self.port))
 
             raw_desc_xml = urlopen(self.location, timeout=5).read().decode()
-
-            # # # test only
-            # os.chdir(os.path.dirname(os.path.abspath(__file__)))  # set file path as current
-            # raw_desc_xml = open('description.xml').read()
-            # # # test end
 
             desc_dict = xmltodict.parse(raw_desc_xml)
             self.__logger.debug('description xml: {}'.format(desc_dict))
@@ -492,42 +286,14 @@ class DlnapDevice:
          </s:Envelope>""".format(action=action, urn=urn, fields=fields)
         return payload
 
-    # def _create_packet(self, action, data):
-        # """ Create packet to send to device control url.
-
-        # action -- control action
-        # data -- dictionary with XML fields value
-        # """
-        # if action in ["SetVolume", "SetMute", "GetVolume"]:
-            # url = self.rendering_control_url
-            # urn = URN_RenderingControl_Fmt.format(self.ssdp_version)
-        # else:
-            # url = self.control_url
-            # urn = URN_AVTransport_Fmt.format(self.ssdp_version)
-        # payload = self._payload_from_template(action=action, data=data, urn=urn)
-
-        # packet = "\r\n".join([
-            # 'POST {} HTTP/1.1'.format(url),
-            # 'User-Agent: {}/{}'.format(__file__, __version__),
-            # 'Accept: */*',
-            # 'Content-Type: text/xml; charset="utf-8"',
-            # 'HOST: {}:{}'.format(self.ip, self.port),
-            # 'Content-Length: {}'.format(len(payload)),
-            # 'SOAPACTION: "{}#{}"'.format(urn, action),
-            # 'Connection: close',
-            # '',
-            # payload,
-            # ])
-
-        # self.__logger.debug(packet)
-        # return packet
-
     def _soap_request(self, action, data):
         """ Send SOAP Request to DMR devices
 
         action -- control action
         data -- dictionary with XML fields value
         """
+        if not self.control_url:
+            return None
         if action in ["SetVolume", "SetMute", "GetVolume"]:
             url = self.rendering_control_url
             # urn = URN_RenderingControl_Fmt.format(self.ssdp_version)
@@ -549,14 +315,14 @@ class DlnapDevice:
             if res.code == 200:
                 data = res.read()
                 self.__logger.debug(data.decode())
-                response = xmltodict.parse(data)
+                # response = xmltodict.parse(data)
+                response = xmltodict.parse(_unescape_xml(data))
                 try:
                     error_description = response['s:Envelope']['s:Body']['s:Fault']['detail']['UPnPError']['errorDescription']
                     logging.error(error_description)
                     return None
                 except:
                     return response
-            # data = _unescape_xml(data)
         except Exception as e:
             logging.error(e)
 
@@ -691,8 +457,6 @@ class DlnapDevice:
         response = self._soap_request('GetMediaInfo', {'InstanceID': instance_id})
         if response:
             return dict(response['s:Envelope']['s:Body']['u:GetMediaInfoResponse'])
-        # packet = self._create_packet('GetMediaInfo', {'InstanceID': instance_id})
-        # return _send_tcp((self.ip, self.port), packet)
 
     def position_info(self, instance_id=0):
         """ Position info.
