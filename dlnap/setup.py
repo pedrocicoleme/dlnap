@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-try:
-    from setuptools import setup
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup
+from setuptools import setup
+
 
 setup(name='dlnap',
       version='0.14',
@@ -34,6 +30,6 @@ setup(name='dlnap',
       ],
       py_modules=['dlnap'],
       install_requires=[
-          'xmltodict==0.11.0',
+          'xmltodict>=0.11.0',
       ],
 )
