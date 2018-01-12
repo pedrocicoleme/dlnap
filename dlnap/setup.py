@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from setuptools import setup
 
-
 setup(name='dlnap',
       version='0.14',
       description='Python over the network media player to playback on DLNA UPnP devices',
