@@ -163,7 +163,31 @@ def _get_port(location):
     return -- port number
     """
     port = re.findall('http://.*?:(\d+).*', location)
+
     return int(port[0]) if port else 80
+
+
+def _get_primary_ip():
+    """ Return the primary ip of the machine
+
+    by Jamieson Becker at StackOverflow
+    https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib#28950776
+
+    return -- the machine ip
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+
+        ip = s.getsockname()[0]
+    except:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+
+    return ip
 
 
 def _get_control_urls(xml):
@@ -870,7 +894,8 @@ if __name__ == '__main__':
         proxy = True
 
     if proxy:
-        ip = socket.gethostbyname(socket.gethostname())
+        ip = _get_primary_ip()
+
         t = threading.Thread(
             target=runProxy, kwargs={'ip': ip,
                                      'port': proxy_port})
