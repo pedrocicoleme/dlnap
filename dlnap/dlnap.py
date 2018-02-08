@@ -68,7 +68,6 @@ running = False
 
 
 class DownloadProxy(BaseHTTPRequestHandler):
-
     def log_message(self, format, *args):
         pass
 
@@ -105,7 +104,7 @@ class DownloadProxy(BaseHTTPRequestHandler):
 
     def do_GET(self):
         global running
-        url = self.path[1:] # replace '/'
+        url = self.path[1:]  # replace '/'
 
         content_type = ''
         if os.path.exists(url):
@@ -130,7 +129,9 @@ class DownloadProxy(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header("Content-Type", content_type)
-            self.send_header("Content-Disposition", 'attachment; filename="{}"'.format(os.path.basename(url)))
+            self.send_header(
+                "Content-Disposition",
+                'attachment; filename="{}"'.format(os.path.basename(url)))
             self.send_header("Content-Length", str(size))
             self.end_headers()
             shutil.copyfileobj(f, self.wfile)
@@ -146,6 +147,7 @@ def runProxy(ip='', port=8000):
     httpd = HTTPServer((ip, port), DownloadProxy)
     while running:
         httpd.handle_request()
+
 
 #
 # PROXY
@@ -169,7 +171,10 @@ def _get_control_urls(xml):
     return -- control url or empty string if wasn't found
     """
     try:
-        return {i['serviceType']:i['controlURL'] for i in xml['root']['device']['serviceList']['service']}
+        return {
+            i['serviceType']: i['controlURL']
+            for i in xml['root']['device']['serviceList']['service']
+        }
     except:
         return
 
@@ -188,9 +193,10 @@ def _send_udp(to, packet):
 
 
 def _unescape_xml(xml):
-   """ Replace escaped xml symbols with real ones.
+    """ Replace escaped xml symbols with real ones.
    """
-   return xml.decode().replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
+    return xml.decode().replace('&lt;', '<').replace('&gt;', '>').replace(
+        '&quot;', '"')
 
 
 def _get_location_url(raw):
@@ -223,7 +229,8 @@ class DlnapDevice:
 
     def __init__(self, raw, ip):
         self.__logger = logging.getLogger(self.__class__.__name__)
-        self.__logger.info('=> New DlnapDevice (ip = {}) initialization..'.format(ip))
+        self.__logger.info(
+            '=> New DlnapDevice (ip = {}) initialization..'.format(ip))
 
         self.ip = ip
         self.ssdp_version = 1
@@ -251,17 +258,19 @@ class DlnapDevice:
             self.__logger.info('friendlyName: {}'.format(self.name))
 
             services_url = _get_control_urls(desc_dict)
-            
+
             self.control_url = services_url[URN_AVTransport]
             self.__logger.info('control_url: {}'.format(self.control_url))
 
             self.rendering_control_url = services_url[URN_RenderingControl]
-            self.__logger.info('rendering_control_url: {}'.format(self.rendering_control_url))
+            self.__logger.info(
+                'rendering_control_url: {}'.format(self.rendering_control_url))
 
             self.has_av_transport = self.control_url is not None
             self.__logger.info('=> Initialization completed'.format(ip))
         except Exception as e:
-            self.__logger.warning('DlnapDevice (ip = {}) init exception:\n{}'.format(ip, traceback.format_exc()))
+            self.__logger.warning('DlnapDevice (ip = {}) init exception:\n{}'.
+                                  format(ip, traceback.format_exc()))
 
     def __repr__(self):
         return '{} @ {}'.format(self.name, self.ip)
@@ -283,7 +292,8 @@ class DlnapDevice:
                   {fields}
                </u:{action}>
             </s:Body>
-         </s:Envelope>""".format(action=action, urn=urn, fields=fields)
+         </s:Envelope>""".format(
+            action=action, urn=urn, fields=fields)
         return payload
 
     def _soap_request(self, action, data):
@@ -302,15 +312,18 @@ class DlnapDevice:
             url = self.control_url
             urn = URN_AVTransport_Fmt.format(self.ssdp_version)
         soap_url = 'http://{}:{}{}'.format(self.ip, self.port, url)
-        headers = {'Content-type': 'text/xml',
-                   'SOAPACTION': '"{}#{}"'.format(urn, action),
-                   'charset': 'utf-8',
-                   'User-Agent': '{}/{}'.format(__file__, __version__)}
+        headers = {
+            'Content-type': 'text/xml',
+            'SOAPACTION': '"{}#{}"'.format(urn, action),
+            'charset': 'utf-8',
+            'User-Agent': '{}/{}'.format(__file__, __version__)
+        }
         self.__logger.debug(headers)
-        payload = self._payload_from_template(action=action, data=data, urn=urn)
+        payload = self._payload_from_template(
+            action=action, data=data, urn=urn)
         self.__logger.debug(payload)
         try:
-            req = Request(soap_url,data=payload.encode(), headers=headers)
+            req = Request(soap_url, data=payload.encode(), headers=headers)
             res = urlopen(req, timeout=5)
             if res.code == 200:
                 data = res.read()
@@ -318,7 +331,8 @@ class DlnapDevice:
                 # response = xmltodict.parse(data)
                 response = xmltodict.parse(_unescape_xml(data))
                 try:
-                    error_description = response['s:Envelope']['s:Body']['s:Fault']['detail']['UPnPError']['errorDescription']
+                    error_description = response['s:Envelope']['s:Body'][
+                        's:Fault']['detail']['UPnPError']['errorDescription']
                     logging.error(error_description)
                     return None
                 except:
@@ -332,8 +346,11 @@ class DlnapDevice:
         url -- media url
         instance_id -- device instance id
         """
-        response = self._soap_request('SetAVTransportURI',
-                                      {'InstanceID': instance_id, 'CurrentURI': url, 'CurrentURIMetaData': ''})
+        response = self._soap_request('SetAVTransportURI', {
+            'InstanceID': instance_id,
+            'CurrentURI': url,
+            'CurrentURIMetaData': ''
+        })
         try:
             response['s:Envelope']['s:Body']['u:SetAVTransportURIResponse']
             return True
@@ -346,7 +363,9 @@ class DlnapDevice:
 
         instance_id -- device instance id
         """
-        response = self._soap_request('Play', {'InstanceID': instance_id, 'Speed': speed})
+        response = self._soap_request(
+            'Play', {'InstanceID': instance_id,
+                     'Speed': speed})
         try:
             response['s:Envelope']['s:Body']['u:PlayResponse']
             return True
@@ -359,7 +378,9 @@ class DlnapDevice:
 
         instance_id -- device instance id
         """
-        response = self._soap_request('Pause', {'InstanceID': instance_id, 'Speed': 1})
+        response = self._soap_request('Pause',
+                                      {'InstanceID': instance_id,
+                                       'Speed': 1})
         try:
             response['s:Envelope']['s:Body']['u:PauseResponse']
             return True
@@ -372,7 +393,9 @@ class DlnapDevice:
 
         instance_id -- device instance id
         """
-        response = self._soap_request('Stop', {'InstanceID': instance_id, 'Speed': 1})
+        response = self._soap_request('Stop',
+                                      {'InstanceID': instance_id,
+                                       'Speed': 1})
         try:
             response['s:Envelope']['s:Body']['u:StopResponse']
             return True
@@ -384,7 +407,11 @@ class DlnapDevice:
         """
         Seek position
         """
-        response = self._soap_request('Seek', {'InstanceID': instance_id, 'Unit': 'REL_TIME', 'Target': position})
+        response = self._soap_request('Seek', {
+            'InstanceID': instance_id,
+            'Unit': 'REL_TIME',
+            'Target': position
+        })
         try:
             response['s:Envelope']['s:Body']['u:SeekResponse']
             return True
@@ -397,8 +424,11 @@ class DlnapDevice:
 
         instance_id -- device instance id
         """
-        response = self._soap_request('SetVolume',
-                                     {'InstanceID': instance_id, 'DesiredVolume': volume, 'Channel': 'Master'})
+        response = self._soap_request('SetVolume', {
+            'InstanceID': instance_id,
+            'DesiredVolume': volume,
+            'Channel': 'Master'
+        })
         try:
             response['s:Envelope']['s:Body']['u:SetVolumeResponse']
             return True
@@ -410,16 +440,23 @@ class DlnapDevice:
         """
         get volume
         """
-        response = self._soap_request('GetVolume', {'InstanceID': instance_id, 'Channel': 'Master'})
+        response = self._soap_request(
+            'GetVolume', {'InstanceID': instance_id,
+                          'Channel': 'Master'})
         if response:
-            return response['s:Envelope']['s:Body']['u:GetVolumeResponse']['CurrentVolume']
+            return response['s:Envelope']['s:Body']['u:GetVolumeResponse'][
+                'CurrentVolume']
 
     def mute(self, instance_id=0):
         """ Stop media that is currently playing back.
 
         instance_id -- device instance id
         """
-        response = self._soap_request('SetMute', {'InstanceID': instance_id, 'DesiredMute': '1', 'Channel': 'Master'})
+        response = self._soap_request('SetMute', {
+            'InstanceID': instance_id,
+            'DesiredMute': '1',
+            'Channel': 'Master'
+        })
         try:
             response['s:Envelope']['s:Body']['u:SetMuteResponse']
             return True
@@ -432,7 +469,11 @@ class DlnapDevice:
 
         instance_id -- device instance id
         """
-        response = self._soap_request('SetMute', {'InstanceID': instance_id, 'DesiredMute': '0', 'Channel': 'Master'})
+        response = self._soap_request('SetMute', {
+            'InstanceID': instance_id,
+            'DesiredMute': '0',
+            'Channel': 'Master'
+        })
         try:
             response['s:Envelope']['s:Body']['u:SetMuteResponse']
             return True
@@ -445,26 +486,32 @@ class DlnapDevice:
 
         instance_id -- device instance id
         """
-        response = self._soap_request('GetTransportInfo', {'InstanceID': instance_id})
+        response = self._soap_request('GetTransportInfo',
+                                      {'InstanceID': instance_id})
         if response:
-            return dict(response['s:Envelope']['s:Body']['u:GetTransportInfoResponse'])
+            return dict(
+                response['s:Envelope']['s:Body']['u:GetTransportInfoResponse'])
 
     def media_info(self, instance_id=0):
         """ Media info.
 
         instance_id -- device instance id
         """
-        response = self._soap_request('GetMediaInfo', {'InstanceID': instance_id})
+        response = self._soap_request('GetMediaInfo',
+                                      {'InstanceID': instance_id})
         if response:
-            return dict(response['s:Envelope']['s:Body']['u:GetMediaInfoResponse'])
+            return dict(
+                response['s:Envelope']['s:Body']['u:GetMediaInfoResponse'])
 
     def position_info(self, instance_id=0):
         """ Position info.
         instance_id -- device instance id
         """
-        response = self._soap_request('GetPositionInfo', {'InstanceID': instance_id})
+        response = self._soap_request('GetPositionInfo',
+                                      {'InstanceID': instance_id})
         if response:
-            return dict(response['s:Envelope']['s:Body']['u:GetPositionInfoResponse'])
+            return dict(
+                response['s:Envelope']['s:Body']['u:GetPositionInfoResponse'])
 
     def set_next(self, url, instance_id=0):
         """ Set next media to playback.
@@ -472,8 +519,11 @@ class DlnapDevice:
         url -- media url
         instance_id -- device instance id
         """
-        response = self._soap_request('SetNextAVTransportURI',
-                                      {'InstanceID': instance_id, 'NextURI': url, 'NextURIMetaData': ''})
+        response = self._soap_request('SetNextAVTransportURI', {
+            'InstanceID': instance_id,
+            'NextURI': url,
+            'NextURIMetaData': ''
+        })
         try:
             response['s:Envelope']['s:Body']['u:SetNextAVTransportURIResponse']
             return True
@@ -494,6 +544,7 @@ class DlnapDevice:
             # Unexpected response
             return False
 
+
 def discover(name='', ip='', timeout=1, st=SSDP_ALL, mx=3, ssdp_version=1):
     """ Discover UPnP devices in the local network.
 
@@ -505,15 +556,11 @@ def discover(name='', ip='', timeout=1, st=SSDP_ALL, mx=3, ssdp_version=1):
     """
     st = st.format(ssdp_version)
     payload = "\r\n".join([
-              'M-SEARCH * HTTP/1.1',
-              'User-Agent: {}/{}'.format(__file__, __version__),
-              'HOST: {}:{}'.format(*SSDP_GROUP),
-              'Accept: */*',
-              'MAN: "ssdp:discover"',
-              'ST: {}'.format(st),
-              'MX: {}'.format(mx),
-              '',
-              ''])
+        'M-SEARCH * HTTP/1.1', 'User-Agent: {}/{}'.format(
+            __file__, __version__), 'HOST: {}:{}'.format(*SSDP_GROUP),
+        'Accept: */*', 'MAN: "ssdp:discover"', 'ST: {}'.format(st),
+        'MX: {}'.format(mx), '', ''
+    ])
     devices = []
     with _send_udp(SSDP_GROUP, payload) as sock:
         start = time.time()
@@ -530,7 +577,8 @@ def discover(name='', ip='', timeout=1, st=SSDP_ALL, mx=3, ssdp_version=1):
                 d = DlnapDevice(data, addr[0])
                 d.ssdp_version = ssdp_version
                 if d not in devices:
-                    if not name or name is None or name.lower() in d.name.lower():
+                    if not name or name is None or name.lower(
+                    ) in d.name.lower():
                         if not ip:
                             devices.append(d)
                     elif d.has_av_transport:
@@ -544,40 +592,60 @@ def discover(name='', ip='', timeout=1, st=SSDP_ALL, mx=3, ssdp_version=1):
                 pass
     return devices
 
+
 if __name__ == '__main__':
     import getopt
-    
+
     def usage():
-        print('{} [--ip <device ip>] [-d[evice] <name>] [--all] [-t[imeout] <seconds>] [--play <url>] [--pause] [--stop] [--proxy]'.format(__file__))
-        print('  --ip <device ip> - ip address for faster access to the known device')
-        print('  --device <device name or part of the name> - discover devices with this name as substring')
-        print('  --all - flag to discover all upnp devices, not only devices with AVTransport ability')
-        print('  --play <url> - set current url for play and start playback it. In case of url is empty - continue playing recent media.')
+        print(
+            '{} [--ip <device ip>] [-d[evice] <name>] [--all] [-t[imeout] <seconds>] [--play <url>] [--pause] [--stop] [--proxy]'.
+            format(__file__))
+        print(
+            '  --ip <device ip> - ip address for faster access to the known device'
+        )
+        print(
+            '  --device <device name or part of the name> - discover devices with this name as substring'
+        )
+        print(
+            '  --all - flag to discover all upnp devices, not only devices with AVTransport ability'
+        )
+        print(
+            '  --play <url> - set current url for play and start playback it. In case of url is empty - continue playing recent media.'
+        )
         print('  --pause - pause current playback')
         print('  --stop - stop current playback')
+        print(
+            '  --set-next <url> - set next url to play after the current one')
+        print('  --next - stop the current url and play the next one')
         print('  --mute - mute playback')
         print('  --unmute - unmute playback')
         print('  --volume <vol> - set current volume for playback')
-        print('  --seek <position in HH:MM:SS> - set current position for playback')
+        print(
+            '  --seek <position in HH:MM:SS> - set current position for playback'
+        )
         print('  --timeout <seconds> - discover timeout')
-        print('  --ssdp-version <version> - discover devices by protocol version, default 1')
+        print(
+            '  --ssdp-version <version> - discover devices by protocol version, default 1'
+        )
         print('  --proxy - use local proxy on proxy port')
-        print('  --proxy-port <port number> - proxy port to listen incomming connections from devices, default 8000')
+        print(
+            '  --proxy-port <port number> - proxy port to listen incomming connections from devices, default 8000'
+        )
         print('  --help - this help')
-    
+
     def version():
         print(__version__)
-    
+
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hvd:t:i:", [   # information arguments
                                                                 'help',
                                                                 'version',
                                                                 'log=',
-    
+
                                                                 # device arguments
                                                                 'device=',
                                                                 'ip=',
-    
+
                                                                 # action arguments
                                                                 'play=',
                                                                 'pause',
@@ -586,25 +654,25 @@ if __name__ == '__main__':
                                                                 'mute',
                                                                 'unmute',
                                                                 'seek=',
-    
-    
+
+
                                                                 # discover arguments
                                                                 'list',
                                                                 'all',
                                                                 'timeout=',
                                                                 'ssdp-version=',
-    
+
                                                                 # transport info
                                                                 'info',
                                                                 'media-info',
-    
+
                                                                 # download proxy
                                                                 'proxy',
                                                                 'proxy-port='])
     except getopt.GetoptError:
         usage()
         sys.exit(1)
-    
+
     device = ''
     url = ''
     vol = 10
@@ -652,6 +720,11 @@ if __name__ == '__main__':
             action = 'pause'
         elif opt in ('--stop'):
             action = 'stop'
+        elif opt in ('--set-next'):
+            action = 'set-next'
+            url = arg
+        elif opt in ('--next'):
+            action = 'next'
         elif opt in ('--volume'):
             action = 'volume'
             vol = arg
@@ -670,42 +743,48 @@ if __name__ == '__main__':
             proxy = True
         elif opt in ('--proxy-port'):
             proxy_port = int(arg)
-    
+
     logging.basicConfig(level=logLevel)
-    
+
     st = URN_AVTransport_Fmt if compatibleOnly else SSDP_ALL
-    allDevices = discover(name=device, ip=ip, timeout=timeout, st=st, ssdp_version=ssdp_version)
+    allDevices = discover(
+        name=device, ip=ip, timeout=timeout, st=st, ssdp_version=ssdp_version)
     if not allDevices:
         print('No compatible devices found.')
         sys.exit(1)
-    
+
     if action in ('', 'list'):
         print('Discovered devices:')
         for d in allDevices:
             print(' {} {}'.format('[a]' if d.has_av_transport else '[x]', d))
         sys.exit(0)
-    
+
     d = allDevices[0]
     print(d)
-    
-    if url.lower().replace('https://', '').replace('www.', '').startswith('youtube.'):
+
+    if url.lower().replace('https://', '').replace('www.',
+                                                   '').startswith('youtube.'):
         import subprocess
-        process = subprocess.Popen(['youtube-dl', '-g', url], stdout=subprocess.PIPE)
+        process = subprocess.Popen(
+            ['youtube-dl', '-g', url], stdout=subprocess.PIPE)
         url, err = process.communicate()
-    
+
     if url.lower().startswith('https://'):
         proxy = True
-    
+
     if proxy:
         ip = socket.gethostbyname(socket.gethostname())
-        t = threading.Thread(target=runProxy, kwargs={'ip': ip, 'port': proxy_port})
+        t = threading.Thread(
+            target=runProxy, kwargs={'ip': ip,
+                                     'port': proxy_port})
         t.start()
         time.sleep(2)
-    
+
     if action == 'play':
         try:
             d.stop()
-            url = 'http://{}:{}/{}'.format(ip, proxy_port, url) if proxy else url
+            url = 'http://{}:{}/{}'.format(ip, proxy_port,
+                                           url) if proxy else url
             d.set_current_media(url=url)
             d.play()
         except Exception as e:
@@ -716,6 +795,18 @@ if __name__ == '__main__':
         d.pause()
     elif action == 'stop':
         d.stop()
+    elif action == 'set-next':
+        try:
+            url = 'http://{}:{}/{}'.format(ip, proxy_port,
+                                           url) if proxy else url
+            d.set_next(url=url)
+        except Exception as e:
+            print('Device is unable to enqueue next media.')
+            logging.warn(
+                'Set_next exception:\n{}'.format(traceback.format_exc()))
+            sys.exit(1)
+    elif action == 'next':
+        d.next()
     elif action == 'volume':
         d.volume(vol)
     elif action == 'seek':
@@ -728,6 +819,6 @@ if __name__ == '__main__':
         print(d.info())
     elif action == 'media-info':
         print(d.media_info())
-    
+
     if proxy:
         t.join()
