@@ -13,7 +13,7 @@ Simple network player for DLNA/UPnP devices allows you discover devices and play
 - [x] Position control
 - [ ] Add support to play media from local machine, e.g --play /home/username/media/music.mp3 for py3
 - [x] Try it on Windows
-- [ ] Add AVTransport:2 and further support
+- [x] Add AVTransport:2 and further support
 - [ ] Play on multiple devices
 - [x] Integrate [local download proxy](https://github.com/cherezov/red)
 - [x] Stop/Pause playback
@@ -21,10 +21,11 @@ Simple network player for DLNA/UPnP devices allows you discover devices and play
  
 ## Supported devices/software
  - [x] Yamaha RX577
- - [x] Samsung Smart TV (UE40ES5507) via [proxy](https://github.com/cherezov/dlnap#proxy)
+ - [x] Samsung Smart TV (UE40ES5507) via [proxy](https://github.com/pedrocicoleme/dlnap#proxy)
  - [x] Marantz MR611
  - [x] [Kodi](https://kodi.tv/)
  - [ ] [Volumio2](https://github.com/volumio/Volumio2) (?)
+ - [x] Pioneer MRX-3 via [proxy](https://github.com/pedrocicoleme/dlnap#proxy)
  * _please email me if it works or doesn't work with your device_
 
 ## Prepare

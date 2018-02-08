@@ -881,7 +881,6 @@ if __name__ == '__main__':
         sys.exit(0)
 
     d = allDevices[0]
-    print(d)
 
     if url.lower().replace('https://', '').replace('www.',
                                                    '').startswith('youtube.'):
