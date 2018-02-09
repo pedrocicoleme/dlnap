@@ -15,17 +15,17 @@ Simple network player for DLNA/UPnP devices allows you discover devices and play
 - [x] Try it on Windows
 - [x] Add AVTransport:2 and further support
 - [ ] Play on multiple devices
-- [x] Integrate [local download proxy](https://github.com/cherezov/red)
+- [x] Integrate [local download proxy](#proxy)
 - [x] Stop/Pause playback
-- [x] Investigate if it possible to play images/video's on DLNA/UPnP powered TV (possible via [download proxy](https://github.com/cherezov/dlnap#proxy))
+- [x] Investigate if it is possible to play images/videos on DLNA/UPnP powered TV (possible via [download proxy](#proxy))
  
 ## Supported devices/software
  - [x] Yamaha RX577
- - [x] Samsung Smart TV (UE40ES5507) via [proxy](https://github.com/pedrocicoleme/dlnap#proxy)
+ - [x] Samsung Smart TV (UE40ES5507) via [proxy](#proxy)
  - [x] Marantz MR611
  - [x] [Kodi](https://kodi.tv/)
  - [ ] [Volumio2](https://github.com/volumio/Volumio2) (?)
- - [x] Pioneer MRX-3 via [proxy](https://github.com/pedrocicoleme/dlnap#proxy) and timeout >= 2
+ - [x] Pioneer MRX-3 via [proxy](#proxy) and timeout >= 2
  * _please email me if it works or doesn't work with your device_
 
 ## Prepare
@@ -45,6 +45,8 @@ __Commands:__
 ```--play <url>``` set current url for play and start playback it. In case of empty url - continue playing recent media  
 ```--pause``` pause current playback  
 ```--stop``` stop current playback  
+```--set-next <url>``` set the next media url to be played (gapless)
+```--next``` play the next media
 __Features:__  
 ```--all``` flag to discover all upnp devices, not only devices with AVTransport ability  
 ```--proxy``` use sync local download proxy, default is ip of current machine  
