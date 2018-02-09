@@ -46,7 +46,7 @@ __Commands:__
 ```--pause``` pause current playback  
 ```--stop``` stop current playback  
 ```--set-next <url>``` set the next media url to be played (gapless)
-```--next``` play the next media
+```--next``` play the next media  
 __Features:__  
 ```--all``` flag to discover all upnp devices, not only devices with AVTransport ability  
 ```--proxy``` use sync local download proxy, default is ip of current machine  
