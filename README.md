@@ -45,7 +45,7 @@ __Commands:__
 ```--play <url>``` set current url for play and start playback it. In case of empty url - continue playing recent media  
 ```--pause``` pause current playback  
 ```--stop``` stop current playback  
-```--set-next <url>``` set the next media url to be played (gapless)
+```--set-next <url>``` set the next media url to be played (gapless)  
 ```--next``` play the next media  
 __Features:__  
 ```--all``` flag to discover all upnp devices, not only devices with AVTransport ability  
