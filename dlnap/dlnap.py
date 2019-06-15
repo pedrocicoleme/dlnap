@@ -194,7 +194,7 @@ def _get_control_urls(xml):
     """ Extract AVTransport contol url from device description xml
 
     xml -- device description xml
-    return -- control url or empty string if wasn't found
+    return -- control url or empty dict if wasn't found
     """
     try:
         return {
@@ -202,7 +202,7 @@ def _get_control_urls(xml):
             for i in xml['root']['device']['serviceList']['service']
         }
     except:
-        return
+        return {}
 
 
 @contextmanager
