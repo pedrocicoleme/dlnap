@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # @file dlnap.py
 # @author cherezov.pavel@gmail.com
