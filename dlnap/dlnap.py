@@ -700,6 +700,19 @@ def discover(name='', ip='', timeout=1, st=SSDP_ALL, mx=3, ssdp_version=1):
                         devices.append(d)
 
                         break
+                elif d.control_url and d.control_url != devices[devices.index(d)].control_url:
+                    if not name or name is None or name.lower(
+                    ) in d.name.lower():
+                        if not ip:
+                            devices[devices.index(d)] = d
+                    elif d.has_av_transport:
+                        # no need in further searching by ip
+                        devices[devices.index(d)] = d
+
+                        break
+                else:
+                    print("already in list: {}".format(d))
+
             elif sock in x:
                 raise Exception('Getting response failed')
             else:
